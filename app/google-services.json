@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "656495974191",
+    "project_id": "memest-857c3",
+    "storage_bucket": "memest-857c3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:656495974191:android:6a1e3325e2ba74d5cdf3da",
+        "android_client_info": {
+          "package_name": "com.rigup.memest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "656495974191-mbtmoi6dob2sn2qstf57eh3u3b8nf1e5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArrH-MYzysqHqcUlot4WylVmeYtUIIIqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "656495974191-mbtmoi6dob2sn2qstf57eh3u3b8nf1e5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
