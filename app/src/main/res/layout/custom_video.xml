@@ -15,7 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/iv_image"
-            android:scaleType="fitXY"/>
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_launcher_background"/>
 
 
 
@@ -33,11 +34,7 @@
         android:layout_margin="10dp"></RelativeLayout>
 
 
-    <ImageView
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:src="@drawable/ic_launcher_background"
-        android:layout_centerInParent="true"/>
+
 
 
 

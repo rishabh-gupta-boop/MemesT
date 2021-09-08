@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -23,6 +25,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -45,12 +48,35 @@ import com.rigup.memest.Model.VideoModel;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-///////////////////////////////////////////////////////
+
 
 
 public class MainActivity extends AppCompatActivity {
+
+    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
+        Bitmap bitmap = null;
+        MediaMetadataRetriever mediaMetadataRetriever = null;
+        try {
+            mediaMetadataRetriever = new MediaMetadataRetriever();
+            mediaMetadataRetriever.setDataSource(videoPath, new HashMap<String, String>());
+            //   mediaMetadataRetriever.setDataSource(videoPath);
+            bitmap = mediaMetadataRetriever.getFrameAtTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Throwable("Exception in retriveVideoFrameFromVideo(String videoPath)" + e.getMessage());
+
+        } finally {
+            if (mediaMetadataRetriever != null) {
+                mediaMetadataRetriever.release();
+            }
+        }
+        return bitmap;
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -146,19 +172,63 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager recyclerViewLayoutManager;
-    ArrayList<VideoModel> arrayListVideos;
+    ArrayList<VideoModel> downloadedImagesArray;
+    ArrayList<String> imagesurl;
+    int totalDownlaodImages = 10;
+    ProgressBar progressBar;
+    ProgressBar bottomProgressBar;
+    GridLayoutManager layoutManager;
+    VideoAdapter videoAdapter;
+
+    //variable for pagination
+    private boolean isLoading=true;
+    private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
+    private  int view_threshold = 10;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         init();
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                visibleItemCount = layoutManager.getChildCount();//totol visible item
+                totalItemCount = layoutManager.getItemCount();//total present item in your recyler view
+                pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+                if(dy>0||dy<0){
+                    if(isLoading){
+                        if(totalItemCount>((pastVisibleItems*2)+visibleItemCount)){
+                            bottomProgressBar.setVisibility(View.GONE);
+                            isLoading = false;
+                            previosTotal=totalItemCount;
+                        }
+                    }
+                    if(!isLoading && (totalItemCount==((pastVisibleItems*2)+visibleItemCount))){
+
+                        performPagination();
+                        isLoading = true;
+
+                    }
+                }
+            }
+        });
     }
 
     public void init(){
         recyclerView = findViewById(R.id.recyclerView);
-        recyclerViewLayoutManager = new GridLayoutManager(getApplicationContext(),2);
+        progressBar = findViewById(R.id.progressBar);
+        bottomProgressBar = findViewById(R.id.bottomProgressBar);
+        progressBar.setVisibility(View.VISIBLE);
+        imagesurl= new ArrayList<String>();
+        recyclerViewLayoutManager = new GridLayoutManager(this,2);
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
-        arrayListVideos = new ArrayList<>();
+        layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+
+        downloadedImagesArray = new ArrayList<>();
         fetchVideoUrlFromDatabase();
     }
 
@@ -170,55 +240,69 @@ public class MainActivity extends AppCompatActivity {
 
                     for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                         Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
-                        VideoModel videoModel = new VideoModel();
+                        imagesurl.add(postSnapshot.child("url").getValue().toString());
 
-                        videoModel.setStr_path(postSnapshot.child("url").getValue().toString());
-                        arrayListVideos.add(videoModel);
                     }
-                    VideoAdapter videoAdapter = new VideoAdapter(getApplicationContext(), arrayListVideos, MainActivity.this);
+                    for(int i=0; i<totalDownlaodImages;i++){
+
+                        try {
+                            Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
+
+                            if (bitmap != null) {
+                                VideoModel videoModel = new VideoModel();
+                                videoModel.setDownloadImages(bitmap);
+                                downloadedImagesArray.add(videoModel);
+
+                            }
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+
+                    }
+
+                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
                     recyclerView.setAdapter(videoAdapter);
+                    progressBar.setVisibility(View.GONE);
 
 
-//                    Log.i("arrayListVideos", arrayListVideos.toString());
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
 
                 }
+
+
             });
-
-
-//                    addChildEventListener(new ChildEventListener() {
-//                @Override
-//                public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-//
-//
-//
-//                }
-//
-//                @Override
-//                public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-//                @Override
-//                public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
-//                @Override
-//                public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-//                @Override
-//                public void onCancelled(@NonNull DatabaseError error) {}
-//
-//
-//            });
-//
-
-
-
-
-
-
-
 
 
 
     }
+
+    private void performPagination(){
+        bottomProgressBar.setVisibility(View.VISIBLE);
+        if(imagesurl.size()-totalDownlaodImages>0){
+            Log.i("imagesurl" , "this is shit");
+//            for(int i=totalDownlaodImages+1;i<totalDownlaodImages+10;i++){
+//                try {
+//                    Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
+//
+//                    if (bitmap != null) {
+//                        VideoModel videoModel = new VideoModel();
+//                        videoModel.setDownloadImages(bitmap);
+//                        downloadedImagesArray.add(videoModel);
+//                        totalDownlaodImages++;
+//
+//                    }
+//                } catch (Throwable throwable) {
+//                    throwable.printStackTrace();
+//                }
+//
+//            }
+//            videoAdapter.notifyDataSetChanged();
+        }
+    }
+
+
 
 }

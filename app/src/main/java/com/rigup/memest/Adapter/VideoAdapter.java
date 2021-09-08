@@ -19,40 +19,23 @@ import com.bumptech.glide.request.RequestOptions;
 import com.rigup.memest.Model.VideoModel;
 import com.rigup.memest.R;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
 
     Context context;
-    ArrayList<VideoModel> arrayListVideos;
+    ArrayList<VideoModel> downloadedImagesArray;
     Activity activity;
-    public VideoAdapter(Context context, ArrayList<VideoModel> arrayListVideos, Activity activity){
+    public VideoAdapter(Context context, ArrayList<VideoModel> downloadedImagesArray, Activity activity){
         this.context = context;
-        this.arrayListVideos = arrayListVideos;
+        this.downloadedImagesArray = downloadedImagesArray;
         this.activity = activity;
 
     }
 
-    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
-        Bitmap bitmap = null;
-        MediaMetadataRetriever mediaMetadataRetriever = null;
-        try {
-            mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(videoPath, new HashMap<String, String>());
-            //   mediaMetadataRetriever.setDataSource(videoPath);
-            bitmap = mediaMetadataRetriever.getFrameAtTime();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Throwable("Exception in retriveVideoFrameFromVideo(String videoPath)" + e.getMessage());
 
-        } finally {
-            if (mediaMetadataRetriever != null) {
-                mediaMetadataRetriever.release();
-            }
-        }
-        return bitmap;
-    }
 
 
     @NonNull
@@ -67,17 +50,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
+        holder.imageView.setImageBitmap(downloadedImagesArray.get(position).getDownloadImages());
 
-
-        try {
-            Bitmap bitmap = retriveVideoFrameFromVideo(arrayListVideos.get(position).getStr_path());
-
-            if (bitmap != null) {
-                holder.imageView.setImageBitmap(bitmap);
-            }
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
 
 //        holder.r1_select.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -92,8 +66,9 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     @Override
     public int getItemCount() {
 
-        Log.i("array list used", String.valueOf(arrayListVideos.size()));
-        return 55;
+        Log.i("array list used", String.valueOf(downloadedImagesArray.size()));
+        return downloadedImagesArray.size();
+//        return 10;
     }
 
 
@@ -110,6 +85,15 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         }
 
 
+    }
+
+    public void addImages(ArrayList<Bitmap> images){
+        for(Bitmap im:images){
+            VideoModel videoModel = new VideoModel();
+            videoModel.setDownloadImages(im);
+            downloadedImagesArray.add(videoModel);
+        }
+        notifyDataSetChanged();
     }
 
 }
