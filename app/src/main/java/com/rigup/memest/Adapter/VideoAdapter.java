@@ -50,7 +50,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
-        holder.imageView.setImageBitmap(downloadedImagesArray.get(position).getDownloadImages());
+//        holder.imageView.setImageBitmap(downloadedImagesArray.get(position).getDownloadImages());
 
 
 //        holder.r1_select.setOnClickListener(new View.OnClickListener() {
@@ -67,8 +67,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public int getItemCount() {
 
         Log.i("array list used", String.valueOf(downloadedImagesArray.size()));
-        return downloadedImagesArray.size();
-//        return 10;
+//        return downloadedImagesArray.size();
+        return 10;
     }
 
 
@@ -87,11 +87,9 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     }
 
-    public void addImages(ArrayList<Bitmap> images){
-        for(Bitmap im:images){
-            VideoModel videoModel = new VideoModel();
-            videoModel.setDownloadImages(im);
-            downloadedImagesArray.add(videoModel);
+    public void addImages(ArrayList<VideoModel> images){
+        for(VideoModel im:images){
+            downloadedImagesArray.add(im);
         }
         notifyDataSetChanged();
     }

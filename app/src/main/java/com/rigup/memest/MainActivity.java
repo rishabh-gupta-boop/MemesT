@@ -11,9 +11,11 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TimeUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,7 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -179,6 +181,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar bottomProgressBar;
     GridLayoutManager layoutManager;
     VideoAdapter videoAdapter;
+    DownloadImagesInBackground downloadImagesInBackground;
+
 
     //variable for pagination
     private boolean isLoading=true;
@@ -207,9 +211,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     if(!isLoading && (totalItemCount==((pastVisibleItems*2)+visibleItemCount))){
-
-                        performPagination();
+                        bottomProgressBar.setVisibility(View.VISIBLE);
                         isLoading = true;
+                        performPagination();
+
 
                     }
                 }
@@ -227,9 +232,11 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
         layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+        downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
 
         downloadedImagesArray = new ArrayList<>();
         fetchVideoUrlFromDatabase();
+
     }
 
     public void fetchVideoUrlFromDatabase(){
@@ -243,22 +250,22 @@ public class MainActivity extends AppCompatActivity {
                         imagesurl.add(postSnapshot.child("url").getValue().toString());
 
                     }
-                    for(int i=0; i<totalDownlaodImages;i++){
-
-                        try {
-                            Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
-
-                            if (bitmap != null) {
-                                VideoModel videoModel = new VideoModel();
-                                videoModel.setDownloadImages(bitmap);
-                                downloadedImagesArray.add(videoModel);
-
-                            }
-                        } catch (Throwable throwable) {
-                            throwable.printStackTrace();
-                        }
-
-                    }
+//                    for(int i=0; i<totalDownlaodImages;i++){
+//
+//                        try {
+//                            Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
+//
+//                            if (bitmap != null) {
+//                                VideoModel videoModel = new VideoModel();
+//                                videoModel.setDownloadImages(bitmap);
+//                                downloadedImagesArray.add(videoModel);
+//
+//                            }
+//                        } catch (Throwable throwable) {
+//                            throwable.printStackTrace();
+//                        }
+//
+//                    }
 
                     videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
                     recyclerView.setAdapter(videoAdapter);
@@ -279,11 +286,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void performPagination(){
-        bottomProgressBar.setVisibility(View.VISIBLE);
-        if(imagesurl.size()-totalDownlaodImages>0){
-            Log.i("imagesurl" , "this is shit");
-//            for(int i=totalDownlaodImages+1;i<totalDownlaodImages+10;i++){
+    private void performPagination() {
+
+
+
+
+        Log.i("running", downloadImagesInBackground.getStatus().toString());
+                if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
+                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
+                    downloadImagesInBackground.execute(10);
+                    Log.i("running", downloadImagesInBackground.getStatus().toString());
+
+                }
+
+
+//              for(int i=totalDownlaodImages+1;i<totalDownlaodImages+10;i++){
+//                  if(imagesurl.get(i)!=null){
+//                      Log.i("ladyyyy",String.valueOf(i));
+//                      TimeUnit.SECONDS.sleep(1);
+//                  }
+
+
 //                try {
 //                    Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
 //
@@ -298,11 +321,16 @@ public class MainActivity extends AppCompatActivity {
 //                    throwable.printStackTrace();
 //                }
 //
-//            }
-//            videoAdapter.notifyDataSetChanged();
-        }
-    }
+              }
+
+            }
 
 
 
-}
+
+
+
+
+
+
+
