@@ -20,7 +20,6 @@ import java.util.HashMap;
 public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>>  {
     private WeakReference<MainActivity> activityWeakReference;
     private int totalDownlaodedImages = 10;
-
     public DownloadImagesInBackground(MainActivity activity) {
         activityWeakReference = new WeakReference<MainActivity>(activity);
     }
@@ -34,7 +33,11 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
             return;
         }
         Log.i("onPregress", "started");
-        activity.progressBar.setVisibility(View.VISIBLE);
+        if(activity.totalDownlaodImages==0){
+            activity.progressBar.setVisibility(View.VISIBLE);
+        }
+
+        Log.i("progess", String.valueOf(activity.totalDownlaodImages));
 
 
 
@@ -43,8 +46,11 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected ArrayList<VideoModel> doInBackground(ArrayList<String>... arrayLists) {
         ArrayList<VideoModel> downlaodedImagesArray = new ArrayList<>();
+        MainActivity activity =activityWeakReference.get();
+        totalDownlaodedImages+=activity.totalDownlaodImages;
         if(arrayLists[0].size()>0){
-            for(int i=0;i<totalDownlaodedImages;i++){
+            for(int i=activity.totalDownlaodImages;i<totalDownlaodedImages;i++){
+                activity.totalDownlaodImages++;
                 if(arrayLists[0].get(i)!=null){
                     try {
                         Bitmap bitmap = retriveVideoFrameFromVideo(arrayLists[0].get(i));
@@ -61,30 +67,32 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
                     }
 
                 }
+
             }
         }
 
         return downlaodedImagesArray;
     }
 
-    @Override
-    protected void onProgressUpdate(ArrayList<VideoModel>... values) {
-        super.onProgressUpdate(values);
 
-
-    }
 
     @Override
     protected void onPostExecute(ArrayList<VideoModel> arrayList) {
         super.onPostExecute(arrayList);
         MainActivity activity =activityWeakReference.get();
+
         if(activity == null || activity.isFinishing()){
             return;
         }
-        activity.progressBar.setVisibility(View.GONE);
-        VideoAdapter videoAdapter;
-        videoAdapter = new VideoAdapter(activity, arrayList, activity);
-        activity.recyclerView.setAdapter(videoAdapter);
+
+
+        activity.videoAdapter.addImagess(arrayList);
+
+
+
+
+
+
     }
 
 

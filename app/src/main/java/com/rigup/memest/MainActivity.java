@@ -56,6 +56,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static com.rigup.memest.DownloadImagesInBackground.retriveVideoFrameFromVideo;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -159,8 +161,10 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBar;
     ProgressBar bottomProgressBar;
     GridLayoutManager layoutManager;
-    VideoAdapter videoAdapter;
     DownloadImagesInBackground downloadImagesInBackground;
+    ArrayList<VideoModel> downloadedImagesArray;
+    boolean initialiseVideoAdapter = false;
+    VideoAdapter videoAdapter;
 
 
     //variable for pagination
@@ -182,14 +186,16 @@ public class MainActivity extends AppCompatActivity {
                 pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
 
                 if(dy>0||dy<0){
+                    Log.i("pastVisisbleItemCount", String.valueOf(pastVisibleItems));
                     if(isLoading){
-                        if(totalItemCount>((pastVisibleItems*2)+visibleItemCount)){
+                        if(totalItemCount>(pastVisibleItems+visibleItemCount)){
+
                             bottomProgressBar.setVisibility(View.GONE);
                             isLoading = false;
                             previosTotal=totalItemCount;
                         }
                     }
-                    if(!isLoading && (totalItemCount==((pastVisibleItems*2)+visibleItemCount))){
+                    if(!isLoading && (totalItemCount<=(pastVisibleItems+visibleItemCount))){
                         bottomProgressBar.setVisibility(View.VISIBLE);
                         isLoading = true;
                         performPagination();
@@ -211,6 +217,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
         layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
         downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
+        downloadedImagesArray = new ArrayList<>();
+        progressBar.setVisibility(View.VISIBLE);
         fetchVideoUrlFromDatabase();
 
     }
@@ -226,7 +234,27 @@ public class MainActivity extends AppCompatActivity {
                     imagesurl.add(postSnapshot.child("url").getValue().toString());
 
                 }
-                downloadImagesInBackground.execute(imagesurl);
+
+                for(int i = 0; i<totalDownlaodImages; i++){
+
+                    try {
+                        Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
+
+                        if (bitmap != null) {
+                            VideoModel videoModel = new VideoModel();
+                            videoModel.setDownloadImages(bitmap);
+                            downloadedImagesArray.add(videoModel);
+
+                        }
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+
+                }
+
+                videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
+                recyclerView.setAdapter(videoAdapter);
+                progressBar.setVisibility(View.GONE);
 
             }
 
@@ -251,37 +279,17 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i("running", downloadImagesInBackground.getStatus().toString());
                 if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
-//                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
-//                    downloadImagesInBackground.execute(10);
+                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
+                    downloadImagesInBackground.execute(imagesurl);
+
+
                     Log.i("running", downloadImagesInBackground.getStatus().toString());
 
                 }
 
-
-//              for(int i=totalDownlaodImages+1;i<totalDownlaodImages+10;i++){
-//                  if(imagesurl.get(i)!=null){
-//                      Log.i("ladyyyy",String.valueOf(i));
-//                      TimeUnit.SECONDS.sleep(1);
-//                  }
-
-
-//                try {
-//                    Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
-//
-//                    if (bitmap != null) {
-//                        VideoModel videoModel = new VideoModel();
-//                        videoModel.setDownloadImages(bitmap);
-//                        downloadedImagesArray.add(videoModel);
-//                        totalDownlaodImages++;
-//
-//                    }
-//                } catch (Throwable throwable) {
-//                    throwable.printStackTrace();
-//                }
-//
               }
 
-            }
+}
 
 
 

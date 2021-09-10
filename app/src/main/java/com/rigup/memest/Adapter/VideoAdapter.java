@@ -27,11 +27,11 @@ import java.util.HashMap;
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
 
     Context context;
-    ArrayList<VideoModel> downloadImagesInBackground;
+    ArrayList<VideoModel> downlaodedImagesArray;
     Activity activity;
-    public VideoAdapter(Context context,ArrayList<VideoModel>  downloadImagesInBackground, Activity activity){
+    public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity){
         this.context = context;
-        this.downloadImagesInBackground = downloadImagesInBackground;
+        this.downlaodedImagesArray = downlaodedImagesArray;
         this.activity = activity;
 
     }
@@ -51,7 +51,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
-        holder.imageView.setImageBitmap(downloadImagesInBackground.get(position).getDownloadImages());
+        holder.imageView.setImageBitmap(downlaodedImagesArray.get(position).getDownloadImages());
 
 
 //        holder.r1_select.setOnClickListener(new View.OnClickListener() {
@@ -68,8 +68,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public int getItemCount() {
 
 //        Log.i("array list used", String.valueOf(downloadImagesInBackground.size()));
-//        return downloadedImagesArray.size();
-        return 10;
+        return downlaodedImagesArray.size();
+//        return 20;
     }
 
 
@@ -88,12 +88,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     }
 
-//    public void addImages(ArrayList<VideoModel> images){
-//        for(VideoModel im:images){
-//            downloadImagesInBackground.add(im);
-//        }
-//        notifyDataSetChanged();
-//    }
+    public void addImagess(ArrayList<VideoModel> images){
+        for(VideoModel im:images){
+            downlaodedImagesArray.add(im);
+        }
+        notifyDataSetChanged();
+    }
 
 }
 
