@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
@@ -57,27 +58,6 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity {
-
-    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
-        Bitmap bitmap = null;
-        MediaMetadataRetriever mediaMetadataRetriever = null;
-        try {
-            mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(videoPath, new HashMap<String, String>());
-            //   mediaMetadataRetriever.setDataSource(videoPath);
-            bitmap = mediaMetadataRetriever.getFrameAtTime();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Throwable("Exception in retriveVideoFrameFromVideo(String videoPath)" + e.getMessage());
-
-        } finally {
-            if (mediaMetadataRetriever != null) {
-                mediaMetadataRetriever.release();
-            }
-        }
-        return bitmap;
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -174,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager recyclerViewLayoutManager;
-    ArrayList<VideoModel> downloadedImagesArray;
     ArrayList<String> imagesurl;
     int totalDownlaodImages = 10;
     ProgressBar progressBar;
@@ -226,61 +205,40 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         bottomProgressBar = findViewById(R.id.bottomProgressBar);
-        progressBar.setVisibility(View.VISIBLE);
         imagesurl= new ArrayList<String>();
         recyclerViewLayoutManager = new GridLayoutManager(this,2);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
         layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
         downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
-
-        downloadedImagesArray = new ArrayList<>();
         fetchVideoUrlFromDatabase();
 
     }
 
     public void fetchVideoUrlFromDatabase(){
 
-            FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
+        FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                    for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                        Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
-                        imagesurl.add(postSnapshot.child("url").getValue().toString());
-
-                    }
-//                    for(int i=0; i<totalDownlaodImages;i++){
-//
-//                        try {
-//                            Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
-//
-//                            if (bitmap != null) {
-//                                VideoModel videoModel = new VideoModel();
-//                                videoModel.setDownloadImages(bitmap);
-//                                downloadedImagesArray.add(videoModel);
-//
-//                            }
-//                        } catch (Throwable throwable) {
-//                            throwable.printStackTrace();
-//                        }
-//
-//                    }
-
-                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
-                    recyclerView.setAdapter(videoAdapter);
-                    progressBar.setVisibility(View.GONE);
-
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
+                    imagesurl.add(postSnapshot.child("url").getValue().toString());
 
                 }
+                downloadImagesInBackground.execute(imagesurl);
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
+            }
 
-                }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
 
 
-            });
+
+        });
+
 
 
 
@@ -293,8 +251,8 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i("running", downloadImagesInBackground.getStatus().toString());
                 if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
-                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
-                    downloadImagesInBackground.execute(10);
+//                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
+//                    downloadImagesInBackground.execute(10);
                     Log.i("running", downloadImagesInBackground.getStatus().toString());
 
                 }

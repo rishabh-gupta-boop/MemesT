@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.request.RequestOptions;
+import com.rigup.memest.DownloadImagesInBackground;
 import com.rigup.memest.Model.VideoModel;
 import com.rigup.memest.R;
 
@@ -26,11 +27,11 @@ import java.util.HashMap;
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
 
     Context context;
-    ArrayList<VideoModel> downloadedImagesArray;
+    ArrayList<VideoModel> downloadImagesInBackground;
     Activity activity;
-    public VideoAdapter(Context context, ArrayList<VideoModel> downloadedImagesArray, Activity activity){
+    public VideoAdapter(Context context,ArrayList<VideoModel>  downloadImagesInBackground, Activity activity){
         this.context = context;
-        this.downloadedImagesArray = downloadedImagesArray;
+        this.downloadImagesInBackground = downloadImagesInBackground;
         this.activity = activity;
 
     }
@@ -50,7 +51,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
-//        holder.imageView.setImageBitmap(downloadedImagesArray.get(position).getDownloadImages());
+        holder.imageView.setImageBitmap(downloadImagesInBackground.get(position).getDownloadImages());
 
 
 //        holder.r1_select.setOnClickListener(new View.OnClickListener() {
@@ -66,7 +67,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     @Override
     public int getItemCount() {
 
-        Log.i("array list used", String.valueOf(downloadedImagesArray.size()));
+//        Log.i("array list used", String.valueOf(downloadImagesInBackground.size()));
 //        return downloadedImagesArray.size();
         return 10;
     }
@@ -87,12 +88,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     }
 
-    public void addImages(ArrayList<VideoModel> images){
-        for(VideoModel im:images){
-            downloadedImagesArray.add(im);
-        }
-        notifyDataSetChanged();
-    }
+//    public void addImages(ArrayList<VideoModel> images){
+//        for(VideoModel im:images){
+//            downloadImagesInBackground.add(im);
+//        }
+//        notifyDataSetChanged();
+//    }
 
 }
 
