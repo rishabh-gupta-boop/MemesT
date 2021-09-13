@@ -13,8 +13,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
@@ -68,7 +70,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
 
 
-        holder.r1_select.setOnClickListener(new View.OnClickListener() {
+        holder.imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
@@ -101,12 +103,14 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     public static  class ViewHolder extends  RecyclerView.ViewHolder{
         ImageView imageView;
-        RelativeLayout r1_select;
+        Button buttonView;
+//        RelativeLayout r1_select;
 
         public ViewHolder(View itemView){
             super(itemView);
             imageView = itemView.findViewById(R.id.iv_image);
-            r1_select = itemView.findViewById(R.id.r1_select);
+            buttonView= itemView.findViewById(R.id.buttonView);
+//            r1_select = itemView.findViewById(R.id.r1_select);
 
 
         }
@@ -121,22 +125,6 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         notifyDataSetChanged();
     }
 
-    public class videoPopUp extends AsyncTask<String, Void, VideoView> {
-
-        @Override
-        protected VideoView doInBackground(String... url) {
-
-
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(VideoView videoView) {
-            super.onPostExecute(videoView);
-
-        }
-    }
 
 }
 
