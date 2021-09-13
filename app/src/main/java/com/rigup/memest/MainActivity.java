@@ -148,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<VideoModel> downloadedImagesArray;
     boolean initialiseVideoAdapter = false;
     VideoAdapter videoAdapter;
+    ArrayList<String> videoUrl;
     ArrayList<VideoModel> savedVideoModelsImages;
 
     //variable for pagination
@@ -202,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
         downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
         downloadedImagesArray = new ArrayList<>();
         progressBar.setVisibility(View.VISIBLE);
+        videoUrl = new ArrayList<>();
 
         fetchVideoUrlFromDatabase();
 
@@ -216,13 +218,13 @@ public class MainActivity extends AppCompatActivity {
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     Log.i("asdfasdf", postSnapshot.child("thumbnail").getValue().toString());
                     imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-
+                    videoUrl.add(postSnapshot.child("url").getValue().toString());
                 }
 
 
                 try {
                     downloadedImagesArray = downloadImagesInBackground.execute(imagesurl).get();
-                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
+                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this, videoUrl);
                     recyclerView.setAdapter(videoAdapter);
                     progressBar.setVisibility(View.GONE);
                 } catch (ExecutionException e) {
