@@ -1,25 +1,29 @@
 package com.rigup.memest;
 
 
-import android.app.Application;
-import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.rigup.memest.Adapter.VideoAdapter;
 import com.rigup.memest.Model.VideoModel;
 
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>>  {
+import javax.net.ssl.HttpsURLConnection;
+
+public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>> {
     private WeakReference<MainActivity> activityWeakReference;
     private int totalDownlaodedImages = 10;
+    private Object IndexOutOfBoundsException;
+
     public DownloadImagesInBackground(MainActivity activity) {
         activityWeakReference = new WeakReference<MainActivity>(activity);
     }
@@ -28,16 +32,12 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        MainActivity activity =activityWeakReference.get();
-        if(activity == null || activity.isFinishing()){
+        MainActivity activity = activityWeakReference.get();
+        if (activity == null || activity.isFinishing()) {
             return;
         }
-        Log.i("onPregress", "started");
-        if(activity.totalDownlaodImages==0){
-            activity.progressBar.setVisibility(View.VISIBLE);
-        }
 
-        Log.i("progess", String.valueOf(activity.totalDownlaodImages));
+
 
 
 
@@ -46,33 +46,34 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected ArrayList<VideoModel> doInBackground(ArrayList<String>... arrayLists) {
         ArrayList<VideoModel> downlaodedImagesArray = new ArrayList<>();
-        MainActivity activity =activityWeakReference.get();
-        totalDownlaodedImages+=activity.totalDownlaodImages;
-        if(arrayLists[0].size()>0){
-            for(int i=activity.totalDownlaodImages;i<totalDownlaodedImages;i++){
-                activity.totalDownlaodImages++;
-                if(arrayLists[0].get(i)!=null){
-                    try {
-                        Bitmap bitmap = retriveVideoFrameFromVideo(arrayLists[0].get(i));
+        MainActivity activity = activityWeakReference.get();
+        totalDownlaodedImages += activity.totalDownlaodImages;
+        for (int i = activity.totalDownlaodImages; i < totalDownlaodedImages; i++) {
+            activity.totalDownlaodImages++;
 
-                        if (bitmap != null) {
-                            VideoModel videoModel = new VideoModel();
-                            videoModel.setDownloadImages(bitmap);
-                            downlaodedImagesArray.add(videoModel);
-//                            publishProgress(downlaodedImagesArray);
+                try {
+                    URL url = new URL(arrayLists[0].get(i));
+                    HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+                    InputStream in = urlConnection.getInputStream();
+                    Bitmap myBitMap = BitmapFactory.decodeStream(in);
+                    VideoModel videoModel = new VideoModel();
+                    videoModel.setDownloadImages(myBitMap);
+                    downlaodedImagesArray.add(videoModel);
 
-                        }
-                    } catch (Throwable throwable) {
-                        throwable.printStackTrace();
-                    }
-
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    downlaodedImagesArray.add(null);
                 }
 
-            }
+
         }
+
+
 
         return downlaodedImagesArray;
     }
+
+
 
 
 
@@ -85,15 +86,27 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
             return;
         }
 
+        if(totalDownlaodedImages>10){
+            for(int i=0; i<arrayList.size();i++){
+                if(arrayList.get(i)!=null){
+                    activity.videoAdapter.addImagess(arrayList.get(i));
 
-        activity.videoAdapter.addImagess(arrayList);
+                }
+            }
+            activity.bottomProgressBar.setVisibility(View.GONE);
+
+        }
+
+
+
+        }
 
 
 
 
 
 
-    }
+
 
 
     public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {

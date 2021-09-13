@@ -1,43 +1,28 @@
 package com.rigup.memest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.media.MediaMetadataRetriever;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.util.TimeUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.GridLayout;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -49,14 +34,12 @@ import com.google.firebase.storage.StorageReference;
 import com.rigup.memest.Adapter.VideoAdapter;
 import com.rigup.memest.Model.VideoModel;
 
-import java.net.URI;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
 
-import static com.rigup.memest.DownloadImagesInBackground.retriveVideoFrameFromVideo;
+import javax.net.ssl.HttpsURLConnection;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -157,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     RecyclerView.LayoutManager recyclerViewLayoutManager;
     ArrayList<String> imagesurl;
-    int totalDownlaodImages = 10;
+    int totalDownlaodImages = 0;
     ProgressBar progressBar;
     ProgressBar bottomProgressBar;
     GridLayoutManager layoutManager;
@@ -165,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<VideoModel> downloadedImagesArray;
     boolean initialiseVideoAdapter = false;
     VideoAdapter videoAdapter;
-
+    ArrayList<VideoModel> savedVideoModelsImages;
 
     //variable for pagination
     private boolean isLoading=true;
@@ -219,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
         downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
         downloadedImagesArray = new ArrayList<>();
         progressBar.setVisibility(View.VISIBLE);
+
         fetchVideoUrlFromDatabase();
 
     }
@@ -230,31 +214,24 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
-                    imagesurl.add(postSnapshot.child("url").getValue().toString());
+                    Log.i("asdfasdf", postSnapshot.child("thumbnail").getValue().toString());
+                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
 
                 }
 
-                for(int i = 0; i<totalDownlaodImages; i++){
 
-                    try {
-                        Bitmap bitmap = retriveVideoFrameFromVideo(imagesurl.get(i));
-
-                        if (bitmap != null) {
-                            VideoModel videoModel = new VideoModel();
-                            videoModel.setDownloadImages(bitmap);
-                            downloadedImagesArray.add(videoModel);
-
-                        }
-                    } catch (Throwable throwable) {
-                        throwable.printStackTrace();
-                    }
-
+                try {
+                    downloadedImagesArray = downloadImagesInBackground.execute(imagesurl).get();
+                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
+                    recyclerView.setAdapter(videoAdapter);
+                    progressBar.setVisibility(View.GONE);
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
 
-                videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this);
-                recyclerView.setAdapter(videoAdapter);
-                progressBar.setVisibility(View.GONE);
+
 
             }
 
