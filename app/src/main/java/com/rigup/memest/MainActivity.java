@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    Log.i("asdfasdf", postSnapshot.child("thumbnail").getValue().toString());
+                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
                     imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
                     videoUrl.add(postSnapshot.child("url").getValue().toString());
                 }
