@@ -27,10 +27,13 @@ import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.request.RequestOptions;
+import com.rigup.memest.BuildConfig;
 import com.rigup.memest.DownloadImagesInBackground;
 import com.rigup.memest.MainActivity;
 import com.rigup.memest.Model.VideoModel;
@@ -159,6 +162,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
     String videourl;
     Context context;
     Activity activity;
+    String fileName = UUID.randomUUID().toString()+".mp4";
 
     public ShareVideo(String videourl, Context context,Activity activity) {
         this.videourl = videourl;
@@ -168,18 +172,34 @@ class ShareVideo extends AsyncTask<String ,String,String>{
 
     @Override
     protected String doInBackground(String... strings) {
-        sharevideFile(videourl, "video.mp4",activity);
+        sharevideFile(videourl, fileName,activity);
         Log.i("video url", videourl);
         return null;
     }
 
     @Override
     protected void onPostExecute(String s) {
+//        File videoFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/"+fileName);
+//        Uri videoURI = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+//                ? FileProvider.getUriForFile(context, context.getPackageName(), videoFile)
+//                : Uri.fromFile(videoFile);
+//        ShareCompat.IntentBuilder.from(activity)
+//                .setStream(videoURI)
+//                .setType("video/mp4")
+//                .setChooserTitle("Share video...")
+//                .startChooser();
+        Uri imageUri = FileProvider.getUriForFile(
+                context,
+                BuildConfig.APPLICATION_ID+".provider", //(use your app signature + ".provider" )
+                new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + fileName));
+        Log.i("buildconfig deir", BuildConfig.APPLICATION_ID+".provider");
 
-//        Intent sharintent=new Intent("android.intent.action.SEND");
-//        sharintent.setType("video/mp4");
-//        sharintent.putExtra("android.intent.extra.STREAM", Uri.parse("content:///sdcard/DIRECTORY_DOWNLOADS/Awesome_Wp_Video/video.mp4"));
-//        context.startActivity(Intent.createChooser(sharintent,"share"));
+        Intent sharintent=new Intent("android.intent.action.SEND");
+        sharintent.setType("video/mp4");
+        sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        sharintent.putExtra("android.intent.extra.STREAM", imageUri) ;
+        activity.startActivity(Intent.createChooser(sharintent,"muh mae lele"));
 
         super.onPostExecute(s);
     }
@@ -203,12 +223,13 @@ class ShareVideo extends AsyncTask<String ,String,String>{
             Log.i("video URL", videourl);
             DownloadManager downloadManager = (DownloadManager) activity.getSystemService(DOWNLOAD_SERVICE);
             DownloadManager.Request request = new DownloadManager.Request(downloadUri);
-//            Log.i("dsfasd", context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString());
-            request.setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,UUID.randomUUID().toString()+".mp4");
+            Log.i("shitt", context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString());
+            request.setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,name);
 
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setVisibleInDownloadsUi(true);
+            request.setVisibleInDownloadsUi(false);
             request.setAllowedOverRoaming(false);
+            request.setNotificationVisibility(0);
             request.setMimeType("video/mp4");
 
 
