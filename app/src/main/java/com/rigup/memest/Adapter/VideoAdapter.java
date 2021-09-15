@@ -87,7 +87,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
-        holder.imageView.setImageBitmap(downlaodedImagesArray.get(position).getDownloadImages());
+        if(downlaodedImagesArray.get(position).getDownloadImages()!=null){
+            holder.imageView.setImageBitmap(downlaodedImagesArray.get(position).getDownloadImages());
+        }
+
 
 
 

@@ -43,7 +43,22 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 public class MainActivity extends AppCompatActivity {
+    filterSearchInBackground fsib = new filterSearchInBackground(MainActivity.this);
+    private void filter(String text) {
+        if(fsib.getStatus()==AsyncTask.Status.RUNNING){
+            fsib.cancel(true);
+            fsib = new filterSearchInBackground(MainActivity.this);
+            fsib.execute(text);
+        }else{
+            fsib = new filterSearchInBackground(MainActivity.this);
+            fsib.execute(text);
+        }
 
+
+
+
+
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -59,8 +74,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String s) {
+                Log.i("typed query", s);
+                filter(s);
                 return false;
             }
+
+
+
+
         });
 
 
