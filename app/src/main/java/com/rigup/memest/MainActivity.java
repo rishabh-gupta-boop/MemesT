@@ -44,16 +44,34 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
     filterSearchInBackground fsib = new filterSearchInBackground(MainActivity.this);
-    private void filter(String text) {
-        if(fsib.getStatus()==AsyncTask.Status.RUNNING){
-            fsib.cancel(true);
-            fsib = new filterSearchInBackground(MainActivity.this);
-            fsib.execute(text);
-        }else{
-            fsib = new filterSearchInBackground(MainActivity.this);
-            fsib.execute(text);
-        }
 
+
+
+    private void filter(String text) {
+        boolean founded =false;
+        progressBar.setVisibility(View.VISIBLE);
+        ArrayList<String> filterVideoUrl = new ArrayList<>();
+        ArrayList<String> filterImagesurl = new ArrayList<>();
+        ArrayList<VideoModel> filterImageDownloadArray = new ArrayList<>();
+        for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
+            if (postSnapshot.getKey().toLowerCase().contains(text.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(text.toLowerCase())) {
+                founded= true;
+                filterImagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+                filterVideoUrl.add(postSnapshot.child("url").getValue().toString());
+            }
+        }
+        if(founded){
+            try{
+                DownloadImagesInBackground filterDownlaodImageArray = new DownloadImagesInBackground(MainActivity.this);
+                totalDownlaodImages=0;
+                filterImageDownloadArray = filterDownlaodImageArray.execute(filterImagesurl).get();
+                videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this, videoUrl);
+                recyclerView.setAdapter(videoAdapter);
+                progressBar.setVisibility(View.GONE);
+            }catch(Exception e){
+
+            }
+        }
 
 
 
@@ -170,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     boolean initialiseVideoAdapter = false;
     VideoAdapter videoAdapter;
     ArrayList<String> videoUrl;
+    DataSnapshot filterUsedData;
     ArrayList<VideoModel> savedVideoModelsImages;
 
     //variable for pagination
@@ -235,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-
+                filterUsedData = snapshot;
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
                     imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
@@ -281,6 +300,13 @@ public class MainActivity extends AppCompatActivity {
                 if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
                     downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
                     downloadImagesInBackground.execute(imagesurl);
+                    try{
+                        videoAdapter.addImagess(downloadImagesInBackground.get());
+                        bottomProgressBar.setVisibility(View.GONE);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
 
 
                     Log.i("running", downloadImagesInBackground.getStatus().toString());

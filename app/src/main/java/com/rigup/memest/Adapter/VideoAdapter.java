@@ -149,9 +149,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     }
 
-    public void addImagess(VideoModel images){
+    public void addImagess(ArrayList<VideoModel> images){
+        for(VideoModel im: images){
+            downlaodedImagesArray.add(im);
+        }
 
-        downlaodedImagesArray.add(images);
 
         notifyDataSetChanged();
     }
@@ -182,15 +184,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
 
     @Override
     protected void onPostExecute(String s) {
-//        File videoFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/"+fileName);
-//        Uri videoURI = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-//                ? FileProvider.getUriForFile(context, context.getPackageName(), videoFile)
-//                : Uri.fromFile(videoFile);
-//        ShareCompat.IntentBuilder.from(activity)
-//                .setStream(videoURI)
-//                .setType("video/mp4")
-//                .setChooserTitle("Share video...")
-//                .startChooser();
+
         Uri imageUri = FileProvider.getUriForFile(
                 context,
                 BuildConfig.APPLICATION_ID+".provider", //(use your app signature + ".provider" )
@@ -218,9 +212,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
                 ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
             }
 
-//            String rootDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-//
-//            File rootFile = new File(rootDir);
+
 
             Uri downloadUri = Uri.parse(videourl);
             Log.i("video URL", videourl);
