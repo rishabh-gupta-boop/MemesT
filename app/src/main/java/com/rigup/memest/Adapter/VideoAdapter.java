@@ -149,14 +149,16 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     }
 
-    public void addImagess(ArrayList<VideoModel> images){
-        for(VideoModel im: images){
-            downlaodedImagesArray.add(im);
-        }
+    public void addImagess(VideoModel images){
+
+        downlaodedImagesArray.add(images);
 
 
         notifyDataSetChanged();
     }
+
+    public void filteredImages(ArrayList<VideoModel> images){}
+
 
 
 }

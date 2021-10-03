@@ -24,8 +24,10 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     private int totalDownlaodedImages = 10;
     private Object IndexOutOfBoundsException;
 
+
     public DownloadImagesInBackground(MainActivity activity) {
         activityWeakReference = new WeakReference<MainActivity>(activity);
+
     }
 
 
@@ -86,17 +88,18 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
             return;
         }
 
-//        if(totalDownlaodedImages>10 && arrayList.size()>=10){
-//            for(int i=0; i<arrayList.size();i++){
-//                if(arrayList.get(i)!=null){
-//                    activity.videoAdapter.addImagess(arrayList.get(i));
-//                    activity.bottomProgressBar.setVisibility(View.GONE);
-//
-//                }
-//            }
-//
-//
-//        }
+        if(totalDownlaodedImages>10 && arrayList.size()>=10){
+            for(int i=0; i<arrayList.size();i++){
+                if(arrayList.get(i)!=null){
+                    activity.bottomProgressBar.setVisibility(View.VISIBLE);
+                    activity.videoAdapter.addImagess(arrayList.get(i));
+                    activity.bottomProgressBar.setVisibility(View.GONE);
+
+                }
+            }
+
+
+        }
 
 
 

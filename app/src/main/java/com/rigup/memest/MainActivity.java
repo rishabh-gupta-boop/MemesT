@@ -300,12 +300,7 @@ public class MainActivity extends AppCompatActivity {
                 if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
                     downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
                     downloadImagesInBackground.execute(imagesurl);
-                    try{
-                        videoAdapter.addImagess(downloadImagesInBackground.get());
-                        bottomProgressBar.setVisibility(View.GONE);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
+
 
 
 
