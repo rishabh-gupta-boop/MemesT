@@ -22,11 +22,12 @@ import javax.net.ssl.HttpsURLConnection;
 public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>> {
     private WeakReference<MainActivity> activityWeakReference;
     private int totalDownlaodedImages = 10;
-    private Object IndexOutOfBoundsException;
+    ArrayList<String> videoUrl = new ArrayList<>();
 
-
-    public DownloadImagesInBackground(MainActivity activity) {
+    public DownloadImagesInBackground(MainActivity activity, ArrayList<String> VideoUrl) {
         activityWeakReference = new WeakReference<MainActivity>(activity);
+        videoUrl = VideoUrl;
+
 
     }
 
@@ -88,22 +89,11 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
             return;
         }
 
-        if(totalDownlaodedImages>10 && arrayList.size()>=10){
-            for(int i=0; i<arrayList.size();i++){
-                if(arrayList.get(i)!=null){
-                    activity.bottomProgressBar.setVisibility(View.VISIBLE);
-                    activity.videoAdapter.addImagess(arrayList.get(i));
-                    activity.bottomProgressBar.setVisibility(View.GONE);
+        activity.videoAdapter = new VideoAdapter(activity, arrayList, activity,videoUrl );
+        activity.recyclerView.setAdapter(activity.videoAdapter);
+        activity.progressBar.setVisibility(View.GONE);
 
-                }
-            }
-
-
-        }
-
-
-
-        }
+    }
 
 
 

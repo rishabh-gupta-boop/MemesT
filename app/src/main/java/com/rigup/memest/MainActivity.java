@@ -43,36 +43,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 public class MainActivity extends AppCompatActivity {
-    filterSearchInBackground fsib = new filterSearchInBackground(MainActivity.this);
-
-
-
     private void filter(String text) {
-        boolean founded =false;
-        progressBar.setVisibility(View.VISIBLE);
-        ArrayList<String> filterVideoUrl = new ArrayList<>();
-        ArrayList<String> filterImagesurl = new ArrayList<>();
-        ArrayList<VideoModel> filterImageDownloadArray = new ArrayList<>();
-        for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
-            if (postSnapshot.getKey().toLowerCase().contains(text.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(text.toLowerCase())) {
-                founded= true;
-                filterImagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                filterVideoUrl.add(postSnapshot.child("url").getValue().toString());
-            }
-        }
-        if(founded){
-            try{
-                DownloadImagesInBackground filterDownlaodImageArray = new DownloadImagesInBackground(MainActivity.this);
-                totalDownlaodImages=0;
-                filterImageDownloadArray = filterDownlaodImageArray.execute(filterImagesurl).get();
-                videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this, videoUrl);
-                recyclerView.setAdapter(videoAdapter);
-                progressBar.setVisibility(View.GONE);
-            }catch(Exception e){
-
-            }
-        }
-
 
 
 
@@ -87,15 +58,57 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
+                if(s!=""){
+                    imagesurl.clear();
+                    videoUrl.clear();
+                    boolean founded =false;
+                    for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
+                        videoAdapter.clearedImages();
+                        int count =1;
+                        Log.i("number of connects", String.valueOf(count));
+                        count++;
+                        if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(s.toLowerCase())) {
+                            progressBar.setVisibility(View.VISIBLE);
+                            founded= true;
+                            imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+                            videoUrl.add(postSnapshot.child("url").getValue().toString());
+                        }
+
+
+                    }
+
+                    if(founded){
+                        try {
+                            totalDownlaodImages = 0;
+                            downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
+                            downloadImagesInBackground.execute(imagesurl);
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        Toast.makeText(MainActivity.this, "No Result found", Toast.LENGTH_SHORT).show();
+                    }
+
+
+
+                }else{
+
+                }
+
+
+
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String s) {
-                Log.i("typed query", s);
-                filter(s);
+                recordedQuery=s;
+
                 return false;
             }
+
 
 
 
@@ -123,57 +136,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void getDownload(){
-        DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Memes Video");
-
-
-        FirebaseStorage.getInstance().getReference().child("Memes Video").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            @Override
-            public void onSuccess(ListResult listResult) {
-                for (StorageReference prefix : listResult.getPrefixes()) {
-                    Log.i("this is prefix", prefix.getName());
-                    FirebaseStorage.getInstance().getReference().child("Memes Video").child(prefix.getName()).listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-                        @Override
-                        public void onSuccess(ListResult listResult) {
-                            for (StorageReference item : listResult.getItems()) {
-                                // All the items under listRef.
-                                item.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                    @Override
-                                    public void onSuccess(Uri uri) {
-                                        String url = uri.toString();
-                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("url").setValue(url);
-                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("Keyword").setValue(prefix.getName());
-
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-
-                for (StorageReference item : listResult.getItems()) {
-                    // All the items under listRef.
-                        item.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            String url = uri.toString();
-                            Log.i("download url", url.toString());
-                            Log.i("download url", item.getName().toString());
-                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("url").setValue(url);
-                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("Keyword").setValue("");
-
-                        }
-                    });
-
-
-                }
-            }
-        });
 
 
 
-
-    }
 
 
     RecyclerView recyclerView;
@@ -182,16 +147,14 @@ public class MainActivity extends AppCompatActivity {
     int totalDownlaodImages = 0;
     ProgressBar progressBar;
     ProgressBar bottomProgressBar;
+    String recordedQuery;
     GridLayoutManager layoutManager;
     DownloadImagesInBackground downloadImagesInBackground;
     ArrayList<VideoModel> downloadedImagesArray;
-    boolean initialiseVideoAdapter = false;
     VideoAdapter videoAdapter;
     ArrayList<String> videoUrl;
+    SearchView searchView;
     DataSnapshot filterUsedData;
-    ArrayList<VideoModel> savedVideoModelsImages;
-
-    //variable for pagination
     private boolean isLoading=true;
     private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
     private  int view_threshold = 10;
@@ -240,10 +203,11 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
         layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-        downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
+
         downloadedImagesArray = new ArrayList<>();
         progressBar.setVisibility(View.VISIBLE);
         videoUrl = new ArrayList<>();
+        searchView = findViewById(R.id.searchBar);
 
         fetchVideoUrlFromDatabase();
 
@@ -263,17 +227,12 @@ public class MainActivity extends AppCompatActivity {
 
 
                 try {
-                    downloadedImagesArray = downloadImagesInBackground.execute(imagesurl).get();
-                    videoAdapter = new VideoAdapter(getApplicationContext(), downloadedImagesArray, MainActivity.this, videoUrl);
-                    recyclerView.setAdapter(videoAdapter);
-                    progressBar.setVisibility(View.GONE);
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
+                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
+                    downloadImagesInBackground.execute(imagesurl);
+
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-
 
             }
 
@@ -292,24 +251,67 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performPagination() {
-
-
-
-
         Log.i("running", downloadImagesInBackground.getStatus().toString());
                 if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
-                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this);
-                    downloadImagesInBackground.execute(imagesurl);
-
-
-
-
+                    ScrollDownResult scrollDownResult = new ScrollDownResult(MainActivity.this,videoUrl);
+                    scrollDownResult.execute(imagesurl);
                     Log.i("running", downloadImagesInBackground.getStatus().toString());
 
                 }
 
               }
 
+    public void getDownload(){
+        DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Memes Video");
+
+
+        FirebaseStorage.getInstance().getReference().child("Memes Video").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            @Override
+            public void onSuccess(ListResult listResult) {
+                for (StorageReference prefix : listResult.getPrefixes()) {
+                    Log.i("this is prefix", prefix.getName());
+                    FirebaseStorage.getInstance().getReference().child("Memes Video").child(prefix.getName()).listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                        @Override
+                        public void onSuccess(ListResult listResult) {
+                            for (StorageReference item : listResult.getItems()) {
+                                // All the items under listRef.
+                                item.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        String url = uri.toString();
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("url").setValue(url);
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("Keyword").setValue(prefix.getName());
+
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                for (StorageReference item : listResult.getItems()) {
+                    // All the items under listRef.
+                    item.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            String url = uri.toString();
+                            Log.i("download url", url.toString());
+                            Log.i("download url", item.getName().toString());
+                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("url").setValue(url);
+                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("Keyword").setValue("");
+
+                        }
+                    });
+
+
+                }
+            }
+        });
+
+
+
+
+    }
 }
 
 

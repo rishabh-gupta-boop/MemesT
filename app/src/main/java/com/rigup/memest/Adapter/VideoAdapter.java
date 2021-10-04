@@ -87,6 +87,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.isMemoryCacheable();
+        Log.i("downloadImagesArray", downlaodedImagesArray.toString());
         if(downlaodedImagesArray.get(position).getDownloadImages()!=null){
             holder.imageView.setImageBitmap(downlaodedImagesArray.get(position).getDownloadImages());
         }
@@ -125,23 +126,27 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     @Override
     public int getItemCount() {
+        int position = 0;
+        for(int i=0; i<downlaodedImagesArray.size();i++){
+            if(downlaodedImagesArray.get(i)!=null){
+                position++;
+            }
+        }
+        return position;
 
-//        Log.i("array list used", String.valueOf(downloadImagesInBackground.size()));
-        return downlaodedImagesArray.size();
-//        return 20;
     }
 
 
     public static  class ViewHolder extends  RecyclerView.ViewHolder{
         ImageView imageView;
         Button shareButtonView;
-//        RelativeLayout r1_select;
+
 
         public ViewHolder(View itemView){
             super(itemView);
             imageView = itemView.findViewById(R.id.iv_image);
             shareButtonView= itemView.findViewById(R.id.shareButtonView);
-//            r1_select = itemView.findViewById(R.id.r1_select);
+
 
 
         }
@@ -157,7 +162,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         notifyDataSetChanged();
     }
 
-    public void filteredImages(ArrayList<VideoModel> images){}
+    public void clearedImages(){
+        downlaodedImagesArray.clear();
+        notifyDataSetChanged();
+    }
+
+
 
 
 
