@@ -18,7 +18,7 @@
             android:layout_height="150dp"
             android:id="@+id/iv_image"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_launcher_background"/>
+            android:src="@color/ic_launcher_background"/>
 
         <Button
             android:id="@+id/shareButtonView"

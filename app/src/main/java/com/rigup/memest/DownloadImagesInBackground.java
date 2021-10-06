@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.View;
 
 import com.rigup.memest.Adapter.VideoAdapter;
