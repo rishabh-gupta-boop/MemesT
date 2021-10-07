@@ -2,10 +2,12 @@ package com.rigup.memest;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,8 +17,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
+
 import android.widget.Toast;
 
 
@@ -31,7 +35,6 @@ import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
 import com.rigup.memest.Adapter.VideoAdapter;
 import com.rigup.memest.Model.VideoModel;
-
 import java.util.ArrayList;
 
 
@@ -48,50 +51,34 @@ public class MainActivity extends AppCompatActivity {
         MenuItem menuItem = menu.findItem(R.id.searchBar);
         SearchView searchView = (SearchView) menuItem.getActionView();
         searchView.setQueryHint("Search Here!");
+
+        final SearchView.SearchAutoComplete searchAutoComplete = (SearchView.SearchAutoComplete)searchView.findViewById(R.id.search_src_text);
+//        searchAutoComplete.setBackgroundColor(Color.WHITE);
+//        searchAutoComplete.setTextColor(Color.BLACK);
+        searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
+        searchAutoComplete.setThreshold(1);
+        // Create a new ArrayAdapter and add data to search auto complete object.
+        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, autoCompleteSearchList);
+
+        searchAutoComplete.setAdapter(newsAdapter);
+
+        // Listen to search view item on click event.
+        searchAutoComplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int itemIndex, long id) {
+                String queryString=(String)adapterView.getItemAtPosition(itemIndex);
+                searchAutoComplete.setText("" + queryString);
+                filteredSearch(queryString);
+//                Toast.makeText(MainActivity.this, "you clicked " + queryString, Toast.LENGTH_LONG).show();
+            }
+        });
+
+
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
-                if(s!=""){
-                    imagesurl.clear();
-                    videoUrl.clear();
-                    boolean founded =false;
-                    for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
-                        videoAdapter.clearedImages();
-                        int count =1;
-                        Log.i("number of connects", String.valueOf(count));
-                        count++;
-                        if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(s.toLowerCase())) {
-                            progressBar.setVisibility(View.VISIBLE);
-                            founded= true;
-                            imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                            videoUrl.add(postSnapshot.child("url").getValue().toString());
-                        }
-
-
-                    }
-
-                    if(founded){
-                        try {
-                            totalDownlaodImages = 0;
-                            downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
-                            downloadImagesInBackground.execute(imagesurl);
-
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }else{
-                        Toast.makeText(MainActivity.this, "No Result found", Toast.LENGTH_SHORT).show();
-                    }
-
-
-
-                }else{
-
-                }
-
-
-
+                filteredSearch(s);
                 return false;
             }
 
@@ -110,6 +97,47 @@ public class MainActivity extends AppCompatActivity {
 
 
         return super.onCreateOptionsMenu(menu);
+    }
+
+    public void filteredSearch( String s){
+        if(s!=""){
+            imagesurl.clear();
+            videoUrl.clear();
+            boolean founded =false;
+            for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
+                videoAdapter.clearedImages();
+                int count =1;
+                Log.i("number of connects", String.valueOf(count));
+                count++;
+                if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(s.toLowerCase())) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    founded= true;
+                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+                    videoUrl.add(postSnapshot.child("url").getValue().toString());
+                }
+
+
+            }
+
+            if(founded){
+                try {
+                    totalDownlaodImages = 0;
+                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
+                    downloadImagesInBackground.execute(imagesurl);
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }else{
+                Toast.makeText(MainActivity.this, "No Result found", Toast.LENGTH_SHORT).show();
+            }
+
+
+
+        }else{
+
+        }
     }
 
     @Override
@@ -151,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isLoading=true;
     private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
     private  int view_threshold = 10;
+    ArrayList<String> autoCompleteSearchList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -196,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
         layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-
+        autoCompleteSearchList = new ArrayList<>();
         downloadedImagesArray = new ArrayList<>();
         progressBar.setVisibility(View.VISIBLE);
         videoUrl = new ArrayList<>();
@@ -213,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 filterUsedData = snapshot;
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
                     Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
                     imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
                     videoUrl.add(postSnapshot.child("url").getValue().toString());
