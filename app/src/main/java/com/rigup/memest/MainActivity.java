@@ -3,6 +3,7 @@ package com.rigup.memest;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,11 +26,13 @@ import android.widget.Toast;
 
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.annotations.NotNull;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
@@ -38,7 +41,7 @@ import com.rigup.memest.Model.VideoModel;
 import java.util.ArrayList;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     private void filter(String text) {
 
 
@@ -69,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 String queryString=(String)adapterView.getItemAtPosition(itemIndex);
                 searchAutoComplete.setText("" + queryString);
                 filteredSearch(queryString);
-//                Toast.makeText(MainActivity.this, "you clicked " + queryString, Toast.LENGTH_LONG).show();
+
             }
         });
 
@@ -177,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
     SearchView searchView;
     DataSnapshot filterUsedData;
     private boolean isLoading=true;
+    BottomNavigationView bottomNavigationView;
     private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
     private  int view_threshold = 10;
     ArrayList<String> autoCompleteSearchList;
@@ -186,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         init();
+        bottomNavigation();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -335,6 +340,49 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+
+//    ---------------------------------------------Bottom Navigation----------------------------------------------------------------------
+
+    public void bottomNavigation(){
+        home firstFragment = new home();
+        username secondFragment = new username();
+
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull @NotNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.Home:
+
+//                        FragmentManager fragmentManager = getFragmentManager();
+//                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                        getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, firstFragment).commit();
+                        return true;
+
+                    case R.id.username:
+
+                        getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, secondFragment).commit();
+                        return true;
+
+
+                }
+
+                return false;
+            }
+        });
+
+
+        bottomNavigationView.setSelectedItemId(R.id.Home);
+
+
+
+
+    }
+
+
+
+
 }
 
 

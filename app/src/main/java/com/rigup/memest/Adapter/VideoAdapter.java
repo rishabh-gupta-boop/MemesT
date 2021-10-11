@@ -162,7 +162,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
     Activity activity;
     String fileName = UUID.randomUUID().toString()+".mp4";
 
-    public ShareVideo(String videourl, Context context,Activity activity) {
+    public ShareVideo(String videou1rl, Context context,Activity activity) {
         this.videourl = videourl;
         this.context = context;
         this.activity = activity;
@@ -170,7 +170,10 @@ class ShareVideo extends AsyncTask<String ,String,String>{
 
     @Override
     protected String doInBackground(String... strings) {
+
         sharevideFile(videourl, fileName,activity);
+
+
         Log.i("video url", videourl);
         return null;
     }
@@ -189,7 +192,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
         sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         sharintent.putExtra("android.intent.extra.STREAM", imageUri) ;
-        activity.startActivity(Intent.createChooser(sharintent,"muh mae lele"));
+        activity.startActivity(Intent.createChooser(sharintent,"Share to"));
 
         super.onPostExecute(s);
     }
@@ -214,7 +217,7 @@ class ShareVideo extends AsyncTask<String ,String,String>{
             Log.i("shitt", context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString());
             request.setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,name);
 
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
             request.setVisibleInDownloadsUi(false);
             request.setAllowedOverRoaming(false);
             request.setNotificationVisibility(0);
