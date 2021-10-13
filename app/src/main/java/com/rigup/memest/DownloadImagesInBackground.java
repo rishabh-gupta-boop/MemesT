@@ -19,12 +19,12 @@ import java.util.HashMap;
 import javax.net.ssl.HttpsURLConnection;
 
 public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>> {
-    private WeakReference<MainActivity> activityWeakReference;
+    private WeakReference<home> activityWeakReference;
     private int totalDownlaodedImages = 10;
     ArrayList<String> videoUrl = new ArrayList<>();
 
-    public DownloadImagesInBackground(MainActivity activity, ArrayList<String> VideoUrl) {
-        activityWeakReference = new WeakReference<MainActivity>(activity);
+    public DownloadImagesInBackground(home activity, ArrayList<String> VideoUrl) {
+        activityWeakReference = new WeakReference<home>(activity);
         videoUrl = VideoUrl;
 
 
@@ -34,10 +34,9 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        MainActivity activity = activityWeakReference.get();
-        if (activity == null || activity.isFinishing()) {
-            return;
-        }
+        home activity = activityWeakReference.get();
+//         ||
+
 
 
 
@@ -48,7 +47,7 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected ArrayList<VideoModel> doInBackground(ArrayList<String>... arrayLists) {
         ArrayList<VideoModel> downlaodedImagesArray = new ArrayList<>();
-        MainActivity activity = activityWeakReference.get();
+        home activity = activityWeakReference.get();
         totalDownlaodedImages += activity.totalDownlaodImages;
         for (int i = activity.totalDownlaodImages; i < totalDownlaodedImages; i++) {
             activity.totalDownlaodImages++;
@@ -82,13 +81,11 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
     @Override
     protected void onPostExecute(ArrayList<VideoModel> arrayList) {
         super.onPostExecute(arrayList);
-        MainActivity activity =activityWeakReference.get();
+        home activity =activityWeakReference.get();
 
-        if(activity == null || activity.isFinishing()){
-            return;
-        }
 
-        activity.videoAdapter = new VideoAdapter(activity, arrayList, activity,videoUrl );
+
+        activity.videoAdapter = new VideoAdapter(activity.getContext(), arrayList,  activity.getActivity(),videoUrl );
         activity.recyclerView.setAdapter(activity.videoAdapter);
         activity.progressBar.setVisibility(View.GONE);
 

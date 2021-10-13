@@ -42,11 +42,7 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity{
-    private void filter(String text) {
-
-
-
-    }
+    home myhome = new home();
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -61,7 +57,7 @@ public class MainActivity extends AppCompatActivity{
         searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
         searchAutoComplete.setThreshold(1);
         // Create a new ArrayAdapter and add data to search auto complete object.
-        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, autoCompleteSearchList);
+        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, home.autoCompleteSearchList);
 
         searchAutoComplete.setAdapter(newsAdapter);
 
@@ -104,19 +100,20 @@ public class MainActivity extends AppCompatActivity{
 
     public void filteredSearch( String s){
         if(s!=""){
-            imagesurl.clear();
-            videoUrl.clear();
+            home.imagesurl.clear();
+            home.videoUrl.clear();
             boolean founded =false;
-            for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
-                videoAdapter.clearedImages();
+            for (DataSnapshot postSnapshot : home.filterUsedData.getChildren()) {
+                home.videoAdapter.clearedImages();
                 int count =1;
                 Log.i("number of connects", String.valueOf(count));
                 count++;
                 if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(s.toLowerCase())) {
-                    progressBar.setVisibility(View.VISIBLE);
+                    Log.i("thisisit", "yesss");
+                    home.progressBar.setVisibility(View.VISIBLE);
                     founded= true;
-                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                    videoUrl.add(postSnapshot.child("url").getValue().toString());
+                    home.imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+                    home.videoUrl.add(postSnapshot.child("url").getValue().toString());
                 }
 
 
@@ -124,9 +121,10 @@ public class MainActivity extends AppCompatActivity{
 
             if(founded){
                 try {
+
                     totalDownlaodImages = 0;
-                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
-                    downloadImagesInBackground.execute(imagesurl);
+                    downloadImagesInBackground = new DownloadImagesInBackground(myhome, home.videoUrl);
+                    downloadImagesInBackground.execute(home.imagesurl);
 
 
                 } catch (Exception e) {
@@ -148,17 +146,19 @@ public class MainActivity extends AppCompatActivity{
         super.onOptionsItemSelected(item);
         switch (item.getItemId()) {
             case R.id.searchBar:
-                Toast.makeText(this, "Search bar", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Search bar", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.savedMemes:
-                Toast.makeText(this, "Saved Memes", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Saved Memes", Toast.LENGTH_SHORT).show();
                 return true;
             default:
-                Toast.makeText(this, "nothing Pressed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "nothing Pressed", Toast.LENGTH_SHORT).show();
                 return false;
         }
 
     }
+
+
 
 
 
@@ -188,37 +188,37 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        init();
         bottomNavigation();
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                visibleItemCount = layoutManager.getChildCount();//totol visible item
-                totalItemCount = layoutManager.getItemCount();//total present item in your recyler view
-                pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+//        init();
 
-                if(dy>0||dy<0){
-                    Log.i("pastVisisbleItemCount", String.valueOf(pastVisibleItems));
-                    if(isLoading){
-                        if(totalItemCount>(pastVisibleItems+visibleItemCount)){
-
-                            bottomProgressBar.setVisibility(View.GONE);
-                            isLoading = false;
-                            previosTotal=totalItemCount;
-                        }
-                    }
-                    if(!isLoading && (totalItemCount<=(pastVisibleItems+visibleItemCount))){
-                        bottomProgressBar.setVisibility(View.VISIBLE);
-                        isLoading = true;
-                        performPagination();
-
-
-                    }
-                }
-            }
-        });
+//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+//                super.onScrolled(recyclerView, dx, dy);
+//                visibleItemCount = layoutManager.getChildCount();//totol visible item
+//                totalItemCount = layoutManager.getItemCount();//total present item in your recyler view
+//                pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+//
+//                if(dy>0||dy<0){
+//                    Log.i("pastVisisbleItemCount", String.valueOf(pastVisibleItems));
+//                    if(isLoading){
+//                        if(totalItemCount>(pastVisibleItems+visibleItemCount)){
+//
+//                            bottomProgressBar.setVisibility(View.GONE);
+//                            isLoading = false;
+//                            previosTotal=totalItemCount;
+//                        }
+//                    }
+//                    if(!isLoading && (totalItemCount<=(pastVisibleItems+visibleItemCount))){
+//                        bottomProgressBar.setVisibility(View.VISIBLE);
+//                        isLoading = true;
+//                        performPagination();
+//
+//
+//                    }
+//                }
+//            }
+//        });
     }
 
     public void init(){
@@ -236,47 +236,47 @@ public class MainActivity extends AppCompatActivity{
         videoUrl = new ArrayList<>();
         searchView = findViewById(R.id.searchBar);
 
-        fetchVideoUrlFromDatabase();
+//        fetchVideoUrlFromDatabase();
 
     }
 
-    public void fetchVideoUrlFromDatabase(){
-
-        FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                filterUsedData = snapshot;
-                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
-                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
-                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                    videoUrl.add(postSnapshot.child("url").getValue().toString());
-                }
-
-
-                try {
-                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
-                    downloadImagesInBackground.execute(imagesurl);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-
-
-
-        });
-
-
-
-
-    }
+//    public void fetchVideoUrlFromDatabase(){
+//
+//        FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                filterUsedData = snapshot;
+//                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+//                    autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
+//                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
+//                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+//                    videoUrl.add(postSnapshot.child("url").getValue().toString());
+//                }
+//
+//
+//                try {
+//                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
+//                    downloadImagesInBackground.execute(imagesurl);
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//
+//
+//
+//        });
+//
+//
+//
+//
+//    }
 
     private void performPagination() {
         Log.i("running", downloadImagesInBackground.getStatus().toString());
