@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity{
 
             @Override
             public boolean onQueryTextChange(String s) {
-                recordedQuery=s;
+
 
                 return false;
             }
@@ -123,8 +123,8 @@ public class MainActivity extends AppCompatActivity{
                 try {
 
                     home.totalDownlaodImages = 0;
-                    downloadImagesInBackground = new DownloadImagesInBackground(myhome, home.videoUrl);
-                    downloadImagesInBackground.execute(home.imagesurl);
+                    home.downloadImagesInBackground = new DownloadImagesInBackground(myhome, home.videoUrl);
+                    home.downloadImagesInBackground.execute(home.imagesurl);
 
 
                 } catch (Exception e) {
@@ -163,131 +163,21 @@ public class MainActivity extends AppCompatActivity{
 
 
 
-
-
-    RecyclerView recyclerView;
-    RecyclerView.LayoutManager recyclerViewLayoutManager;
-    ArrayList<String> imagesurl;
-    int totalDownlaodImages = 0;
-    ProgressBar progressBar;
-    ProgressBar bottomProgressBar;
-    String recordedQuery;
-    GridLayoutManager layoutManager;
-    DownloadImagesInBackground downloadImagesInBackground;
-    ArrayList<VideoModel> downloadedImagesArray;
-    VideoAdapter videoAdapter;
-    ArrayList<String> videoUrl;
-    SearchView searchView;
-    DataSnapshot filterUsedData;
-    private boolean isLoading=true;
     BottomNavigationView bottomNavigationView;
-    private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
-    private  int view_threshold = 10;
-    ArrayList<String> autoCompleteSearchList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         bottomNavigation();
-//        init();
 
-//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-//            @Override
-//            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-//                super.onScrolled(recyclerView, dx, dy);
-//                visibleItemCount = layoutManager.getChildCount();//totol visible item
-//                totalItemCount = layoutManager.getItemCount();//total present item in your recyler view
-//                pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
-//
-//                if(dy>0||dy<0){
-//                    Log.i("pastVisisbleItemCount", String.valueOf(pastVisibleItems));
-//                    if(isLoading){
-//                        if(totalItemCount>(pastVisibleItems+visibleItemCount)){
-//
-//                            bottomProgressBar.setVisibility(View.GONE);
-//                            isLoading = false;
-//                            previosTotal=totalItemCount;
-//                        }
-//                    }
-//                    if(!isLoading && (totalItemCount<=(pastVisibleItems+visibleItemCount))){
-//                        bottomProgressBar.setVisibility(View.VISIBLE);
-//                        isLoading = true;
-//                        performPagination();
-//
-//
-//                    }
-//                }
-//            }
-//        });
-    }
-
-    public void init(){
-        recyclerView = findViewById(R.id.recyclerView);
-        progressBar = findViewById(R.id.progressBar);
-        bottomProgressBar = findViewById(R.id.bottomProgressBar);
-        imagesurl= new ArrayList<String>();
-        recyclerViewLayoutManager = new GridLayoutManager(this,2);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(recyclerViewLayoutManager);
-        layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-        autoCompleteSearchList = new ArrayList<>();
-        downloadedImagesArray = new ArrayList<>();
-        progressBar.setVisibility(View.VISIBLE);
-        videoUrl = new ArrayList<>();
-        searchView = findViewById(R.id.searchBar);
-
-//        fetchVideoUrlFromDatabase();
 
     }
 
-//    public void fetchVideoUrlFromDatabase(){
-//
-//        FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                filterUsedData = snapshot;
-//                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-//                    autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
-//                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
-//                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-//                    videoUrl.add(postSnapshot.child("url").getValue().toString());
-//                }
-//
-//
-//                try {
-//                    downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
-//                    downloadImagesInBackground.execute(imagesurl);
-//
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//
-//
-//
-//        });
-//
-//
-//
-//
-//    }
 
-    private void performPagination() {
-        Log.i("running", downloadImagesInBackground.getStatus().toString());
-                if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
-                    ScrollDownResult scrollDownResult = new ScrollDownResult(MainActivity.this,videoUrl);
-                    scrollDownResult.execute(imagesurl);
-                    Log.i("running", downloadImagesInBackground.getStatus().toString());
 
-                }
 
-              }
+
+
 
     public void getDownload(){
         DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Memes Video");

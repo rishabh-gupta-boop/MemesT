@@ -1,5 +1,6 @@
 package com.rigup.memest;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,7 +45,7 @@ public class home extends Fragment {
     ProgressBar bottomProgressBar;
     String recordedQuery;
     GridLayoutManager layoutManager;
-    DownloadImagesInBackground downloadImagesInBackground;
+    static DownloadImagesInBackground downloadImagesInBackground;
     ArrayList<VideoModel> downloadedImagesArray;
     static VideoAdapter videoAdapter;
 
@@ -67,6 +68,35 @@ public class home extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         init(view);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                visibleItemCount = layoutManager.getChildCount();//totol visible item
+                totalItemCount = layoutManager.getItemCount();//total present item in your recyler view
+                pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+                if(dy>0||dy<0){
+                    Log.i("pastVisisbleItemCount", String.valueOf(pastVisibleItems));
+                    if(isLoading){
+                        if(totalItemCount>(pastVisibleItems+visibleItemCount)){
+
+                            bottomProgressBar.setVisibility(View.GONE);
+                            isLoading = false;
+                            previosTotal=totalItemCount;
+                        }
+                    }
+                    if(!isLoading && (totalItemCount<=(pastVisibleItems+visibleItemCount))){
+                        bottomProgressBar.setVisibility(View.VISIBLE);
+                        isLoading = true;
+                        performPagination();
+
+
+                    }
+                }
+            }
+        });
+
         return view;
     }
 
@@ -86,6 +116,17 @@ public class home extends Fragment {
         searchView = view.findViewById(R.id.searchBar);
 
         fetchVideoUrlFromDatabase();
+
+    }
+
+    private void performPagination() {
+        Log.i("running", downloadImagesInBackground.getStatus().toString());
+        if( downloadImagesInBackground.getStatus() != AsyncTask.Status.RUNNING ||downloadImagesInBackground.getStatus() == AsyncTask.Status.FINISHED ){
+            ScrollDownResult scrollDownResult = new ScrollDownResult(home.this,videoUrl);
+            scrollDownResult.execute(imagesurl);
+            Log.i("running", downloadImagesInBackground.getStatus().toString());
+
+        }
 
     }
 

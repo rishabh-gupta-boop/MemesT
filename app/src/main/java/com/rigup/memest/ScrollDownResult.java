@@ -15,12 +15,12 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 public class ScrollDownResult extends AsyncTask<ArrayList<String>, ArrayList<VideoModel>,ArrayList<VideoModel>> {
-    private WeakReference<MainActivity> activityWeakReference;
+    private WeakReference<home> activityWeakReference;
     private int totalDownlaodedImages = 10;
     ArrayList<String> videoUrl = new ArrayList<>();
 
-    public ScrollDownResult(MainActivity activity, ArrayList<String> VideoUrl) {
-        activityWeakReference = new WeakReference<MainActivity>(activity);
+    public ScrollDownResult(home activity, ArrayList<String> VideoUrl) {
+        activityWeakReference = new WeakReference<home>(activity);
         videoUrl = VideoUrl;
 
     }
@@ -29,8 +29,8 @@ public class ScrollDownResult extends AsyncTask<ArrayList<String>, ArrayList<Vid
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        MainActivity activity = activityWeakReference.get();
-        if (activity == null || activity.isFinishing()) {
+        home activity = activityWeakReference.get();
+        if (activity == null || activity.getActivity().isFinishing()) {
             return;
         }
 
@@ -43,7 +43,7 @@ public class ScrollDownResult extends AsyncTask<ArrayList<String>, ArrayList<Vid
     @Override
     protected ArrayList<VideoModel> doInBackground(ArrayList<String>... arrayLists) {
         ArrayList<VideoModel> downlaodedImagesArray = new ArrayList<>();
-        MainActivity activity = activityWeakReference.get();
+        home activity = activityWeakReference.get();
         totalDownlaodedImages += activity.totalDownlaodImages;
         for (int i = activity.totalDownlaodImages; i < totalDownlaodedImages; i++) {
             activity.totalDownlaodImages++;
@@ -77,9 +77,9 @@ public class ScrollDownResult extends AsyncTask<ArrayList<String>, ArrayList<Vid
     @Override
     protected void onPostExecute(ArrayList<VideoModel> arrayList) {
         super.onPostExecute(arrayList);
-        MainActivity activity =activityWeakReference.get();
+        home activity =activityWeakReference.get();
 
-        if(activity == null || activity.isFinishing()){
+        if(activity == null || activity.getActivity().isFinishing()){
             return;
         }
         for(int i=0; i<arrayList.size();i++){
