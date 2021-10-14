@@ -56,7 +56,7 @@ public class home extends Fragment {
     private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
     private  int view_threshold = 10;
     static ArrayList<String> autoCompleteSearchList;
-    
+    View view;
     public home(){
         // require a empty public constructor
     }
@@ -66,8 +66,13 @@ public class home extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
-        init(view);
+
+        if(view==null){
+            view = inflater.inflate(R.layout.fragment_home, container, false);
+            init(view);
+        }
+
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {

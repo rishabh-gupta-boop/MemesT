@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.app.FragmentManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -245,7 +246,8 @@ public class MainActivity extends AppCompatActivity{
                 switch (item.getItemId()) {
                     case R.id.Home:
 
-//                        FragmentManager fragmentManager = getFragmentManager();
+                        FragmentManager fragmentManager = getFragmentManager();
+
 //                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                         getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, firstFragment).commit();
                         return true;
