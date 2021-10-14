@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity{
             if(founded){
                 try {
 
-                    totalDownlaodImages = 0;
+                    home.totalDownlaodImages = 0;
                     downloadImagesInBackground = new DownloadImagesInBackground(myhome, home.videoUrl);
                     downloadImagesInBackground.execute(home.imagesurl);
 

@@ -39,7 +39,7 @@ public class home extends Fragment {
     RecyclerView.LayoutManager recyclerViewLayoutManager;
     static ArrayList<String> imagesurl=new ArrayList<String>();
     static ArrayList<String> videoUrl=new ArrayList<String>();
-    int totalDownlaodImages = 0;
+    static int totalDownlaodImages = 0;
     static ProgressBar progressBar;
     ProgressBar bottomProgressBar;
     String recordedQuery;

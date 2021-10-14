@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
 
 import com.rigup.memest.Adapter.VideoAdapter;
@@ -36,6 +37,7 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
         super.onPreExecute();
         home activity = activityWeakReference.get();
 //         ||
+
 
 
 
@@ -83,7 +85,7 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
         super.onPostExecute(arrayList);
         home activity =activityWeakReference.get();
 
-
+        Log.i("this is not working", arrayList.toString());
 
         activity.videoAdapter = new VideoAdapter(activity.getContext(), arrayList,  activity.getActivity(),videoUrl );
         activity.recyclerView.setAdapter(activity.videoAdapter);
