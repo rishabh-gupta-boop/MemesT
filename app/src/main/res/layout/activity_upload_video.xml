@@ -60,12 +60,17 @@
             android:layout_gravity="center_horizontal"
             android:id="@+id/uploadButton"/>
     </LinearLayout>
-    <ProgressBar
-        android:id="@+id/uploadingProgressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
+
+        <ProgressBar
+            android:id="@+id/uploadingProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"/>
+
+
+
+
 
 </RelativeLayout>

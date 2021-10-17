@@ -21,7 +21,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -51,6 +53,8 @@ public class uploadVideo extends AppCompatActivity {
     Uri selectedVideo;
     EditText videoNameEditText;
     EditText videoTagsEditText;
+
+
     static ProgressBar uploadingProgressBar;
     Button uplaodButton;
     ArrayList<String> tags;
@@ -68,6 +72,9 @@ public class uploadVideo extends AppCompatActivity {
         videoNameEditText = findViewById(R.id.videoNameEditText);
         videoTagsEditText = findViewById(R.id.videoTagsEditText);
         uploadingProgressBar = findViewById(R.id.uploadingProgressBar);
+
+
+
         Intent intent = getIntent();
         selectedVideo = intent.getParcelableExtra("selectedVideo");
         videoNameEditText.setText((String) (new File(selectedVideo.getLastPathSegment())).getName()
@@ -90,6 +97,7 @@ public class uploadVideo extends AppCompatActivity {
                     tags = new ArrayList<String>((Arrays.asList(videoTagsEditText.getText().toString().split("\\s*,\\s*"))));
                     Log.i("this is string", tags.toString());
                     uploadingVideo asdf = new uploadingVideo(uploadVideo.this, videoNameEditText, tags,selectedVideo);
+
                     asdf.execute();
                 }
             }
@@ -113,8 +121,12 @@ class uploadingVideo extends AsyncTask<Void, Void, String>{
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
     Uri selectedVideo;
-    private String outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            .getAbsolutePath() + File.separator + "VID_.mp4";
+    String outputDir;
+    String compressVideoName;
+
+
+
+
     public uploadingVideo(Activity activity, EditText videoTitle, ArrayList<String> videoTags, Uri selectedVid) {
         uploadVideoActivity = activity;
         videoNameEditText = videoTitle;
@@ -126,6 +138,16 @@ class uploadingVideo extends AsyncTask<Void, Void, String>{
     protected void onPreExecute() {
         super.onPreExecute();
         uploadVideo.uploadingProgressBar.setVisibility(View.VISIBLE);
+        //Uploaded video name
+        compressVideoName= UUID.randomUUID().toString()+".mp4";
+
+        //compress file name given
+        File fiddle = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+File.separator+"MemesT");
+        if(!fiddle.mkdir()){
+            fiddle.mkdir();
+        }
+        outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                .getAbsolutePath() +File.separator+"Memest"+ File.separator + compressVideoName;
     }
 
     @Override
@@ -142,6 +164,57 @@ class uploadingVideo extends AsyncTask<Void, Void, String>{
             @Override
             public void onSuccess() {
                 Log.i("startttttt", "success");
+
+
+
+
+                //////////////////////////////////////////Uploading in firebase storage and database/////////////////////////////////////////////////
+
+
+                try {
+                    firebaseStorage.getReference().child(compressVideoName).putStream(new FileInputStream(new File(outputDir)))
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull @NotNull Exception e) {
+                            Toast.makeText(uploadVideoActivity, "Something wrong happens!", Toast.LENGTH_SHORT).show();
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            //get downlaod url of the video in firebase
+                            Log.i("urllinkgs", "dammmmd".toString());
+                            taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    ////////////////////////////////////////////////Updatation in database //////////////////////////////////////////////////////////////////
+
+                                    firebaseDatabase.getReference().child("users").child(firebaseAuth.getCurrentUser().getUid()).child("title").setValue(videoNameEditText.toString());
+                                    firebaseDatabase.getReference().child("users").child(firebaseAuth.getCurrentUser().getUid()).child("tags").setValue(videoTagsEditText.toString());
+                                    firebaseDatabase.getReference().child("users").child(firebaseAuth.getCurrentUser().getUid()).child("videourl").setValue(uri.toString());
+
+                                }
+
+
+
+                                    ////////////////////////////////////////////////End of Updation  in database //////////////////////////////////////////////////////////////////
+
+                            });
+
+
+                        }
+                    });
+
+                } catch (Exception e) {
+                    Log.i("asdfasdf", e.toString() );
+                }
+
+
+
+                //////////////////////////////////////////End of Uploading in firebase storage and database/////////////////////////////////////////////////
+
+
+
+
             }
 
             @Override
@@ -151,37 +224,12 @@ class uploadingVideo extends AsyncTask<Void, Void, String>{
 
             @Override
             public void onProgress(float percent) {
-                Log.i("startttttt", String.valueOf(percent)+"progress");
+
+
             }
         });
 
-//        try {
-//
-//
-//            firebaseStorage.getReference().child(UUID.randomUUID().toString()+".mp4").putStream(new FileInputStream(new File(selectedVideo.getLastPathSegment())))
-//            .addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull @NotNull Exception e) {
-//                    Log.i("faileddd", e.toString());
-//                }
-//            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                @Override
-//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                    //get downlaod url of the video in firebase
-//                    taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                        @Override
-//                        public void onSuccess(Uri uri) {
-//                            Log.i("this is test",uri.toString());
-//                        }
-//                    });
-//
-//
-//                }
-//            });
-//
-//        } catch (Exception e) {
-//            Log.i("asdfasdf", e.toString() );
-//        }
+
         return null;
 
     }
