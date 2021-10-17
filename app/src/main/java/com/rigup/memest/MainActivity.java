@@ -172,6 +172,7 @@ public class MainActivity extends AppCompatActivity{
         bottomNavigation();
 
 
+
     }
 
 
@@ -237,7 +238,7 @@ public class MainActivity extends AppCompatActivity{
 
     public void bottomNavigation(){
         home firstFragment = new home();
-        username secondFragment = new username();
+        username secondFragment = new username(this);
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {

@@ -70,6 +70,7 @@ public class home extends Fragment {
         if(view==null){
             view = inflater.inflate(R.layout.fragment_home, container, false);
             init(view);
+            totalDownlaodImages=0;
         }
 
 

@@ -96,7 +96,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                         sendUserData(inputName, inputPw);
                         Toast.makeText(RegistrationActivity.this,"You've been registered successfully.",Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(RegistrationActivity.this, com.rigup.memest.username.class));
+                        startActivity(new Intent(RegistrationActivity.this, com.rigup.memest.MainActivity.class));
                     }
                     else{
                         progressDialog.dismiss();
@@ -113,7 +113,7 @@ public class RegistrationActivity extends AppCompatActivity {
         firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference users = firebaseDatabase.getReference("users");
         com.rigup.memest.userAuthentication.UserProfile  user = new com.rigup.memest.userAuthentication.UserProfile(username, password);
-        users.push().setValue(user);
+        users.child(firebaseAuth.getCurrentUser().getUid()).setValue(user);
 
     }
 
