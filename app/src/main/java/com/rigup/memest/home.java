@@ -40,6 +40,7 @@ public class home extends Fragment {
     RecyclerView.LayoutManager recyclerViewLayoutManager;
     static ArrayList<String> imagesurl=new ArrayList<String>();
     static ArrayList<String> videoUrl=new ArrayList<String>();
+    static ArrayList<String> creatorName;
     static int totalDownlaodImages = 0;
     static ProgressBar progressBar;
     ProgressBar bottomProgressBar;
@@ -120,6 +121,7 @@ public class home extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         videoUrl = new ArrayList<>();
         searchView = view.findViewById(R.id.searchBar);
+        creatorName = new ArrayList<>();
 
         fetchVideoUrlFromDatabase();
 
