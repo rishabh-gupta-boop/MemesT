@@ -59,7 +59,7 @@ public class uploadVideo extends AppCompatActivity {
     Uri selectedVideo;
     EditText videoNameEditText;
     EditText videoTagsEditText;
-    ImageView thumbnailImages;
+
     FirebaseDatabase firebaseDatabase;
     FirebaseAuth firebaseAuth;
     FirebaseStorage firebaseStorage;
@@ -76,7 +76,7 @@ public class uploadVideo extends AppCompatActivity {
         videoNameEditText = findViewById(R.id.videoNameEditText);
         videoTagsEditText = findViewById(R.id.videoTagsEditText);
         uploadingProgressBar = findViewById(R.id.uploadingProgressBar);
-        thumbnailImages = findViewById(R.id.thumbnailImages);
+
         uplaodButton = findViewById(R.id.uploadButton);
         firebaseAuth =FirebaseAuth.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -142,7 +142,7 @@ public class uploadVideo extends AppCompatActivity {
                                                         .child("title").setValue(videoNameEditText.getText().toString());
 
                                                 firebaseDatabase.getReference().child("users").child(firebaseAuth.getCurrentUser().getUid()).child(contentId)
-                                                        .child("tags").setValue(videoTagsEditText.toString());
+                                                        .child("tags").setValue(videoTagsEditText.getText().toString());
 
                                                 firebaseDatabase.getReference().child("users").child(firebaseAuth.getCurrentUser().getUid()).child(contentId)
                                                         .child("videourl").setValue(uri.toString());
@@ -154,8 +154,12 @@ public class uploadVideo extends AppCompatActivity {
 
                                                 } catch (Exception e) {
                                                     Toast.makeText(uploadVideo.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                                                    uploadingProgressBar.setVisibility(View.GONE);
+                                                    Log.i("this is eriir", e.toString());
                                                 } catch (Throwable throwable) {
                                                     Toast.makeText(uploadVideo.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                                                    uploadingProgressBar.setVisibility(View.GONE);
+                                                    Log.i("this is eriir", throwable.toString());
                                                 }
                                             }
                                         });
@@ -167,6 +171,7 @@ public class uploadVideo extends AppCompatActivity {
                             } catch (Exception e) {
                                 Toast.makeText(uploadVideo.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                                 uploadingProgressBar.setVisibility(View.GONE);
+                                Log.i("this is eriir", e.toString());
                             }
 
                             ////////////////////////////////////////End of Uploading in firebase storage and database/////////////////////////////////////////////////
@@ -229,7 +234,7 @@ public class uploadVideo extends AppCompatActivity {
         Bitmap thumbnail = retriveVideoFrameFromVideo(url);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.PNG,100,stream);
+        thumbnail.compress(Bitmap.CompressFormat.PNG,10,stream);
         byte[] byteArray = stream.toByteArray();
         firebaseStorage.getReference().child("Thumbnail").child(thumbnailName).putBytes(byteArray)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
