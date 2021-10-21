@@ -7,7 +7,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,26 +26,30 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.annotations.NotNull;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.rigup.memest.Adapter.VideoAdapter;
 import com.rigup.memest.Model.VideoModel;
+
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
-    private void filter(String text) {
 
-
-
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -176,10 +182,13 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> videoUrl;
     SearchView searchView;
     DataSnapshot filterUsedData;
+    FirebaseDatabase firebaseDatabase;
+    FirebaseStorage firebaseStorage;
     private boolean isLoading=true;
     private int pastVisibleItems,visibleItemCount,totalItemCount,previosTotal = 0;
     private  int view_threshold = 10;
     ArrayList<String> autoCompleteSearchList;
+    ArrayList<String> videoNamee;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -221,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         bottomProgressBar = findViewById(R.id.bottomProgressBar);
         imagesurl= new ArrayList<String>();
+        videoNamee = new ArrayList<String>();
         recyclerViewLayoutManager = new GridLayoutManager(this,2);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
@@ -230,22 +240,25 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         videoUrl = new ArrayList<>();
         searchView = findViewById(R.id.searchBar);
+        firebaseStorage = FirebaseStorage.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
 
         fetchVideoUrlFromDatabase();
+
 
     }
 
     public void fetchVideoUrlFromDatabase(){
 
-        FirebaseDatabase.getInstance().getReference().child("Memes Video").addValueEventListener(new ValueEventListener() {
+        FirebaseDatabase.getInstance().getReference().child("Attempted Memes Video").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 filterUsedData = snapshot;
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
-                    Log.i("asdfasdf", postSnapshot.child("url").getValue().toString());
                     imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                    videoUrl.add(postSnapshot.child("url").getValue().toString());
+                    videoUrl.add(postSnapshot.child("video url").getValue().toString());
+                    videoNamee.add(postSnapshot.child("name").getValue().toString());
                 }
 
 
@@ -285,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
               }
 
     public void getDownload(){
-        DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Memes Video");
+        DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Attempted Memes Video");
 
 
         FirebaseStorage.getInstance().getReference().child("Memes Video").listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
@@ -293,7 +306,8 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(ListResult listResult) {
                 for (StorageReference prefix : listResult.getPrefixes()) {
                     Log.i("this is prefix", prefix.getName());
-                    FirebaseStorage.getInstance().getReference().child("Memes Video").child(prefix.getName()).listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+                    FirebaseStorage.getInstance().getReference().child("Memes Video").child(prefix.getName())
+                            .listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                         @Override
                         public void onSuccess(ListResult listResult) {
                             for (StorageReference item : listResult.getItems()) {
@@ -302,7 +316,14 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onSuccess(Uri uri) {
                                         String url = uri.toString();
-                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("url").setValue(url);
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video url").setValue(url);
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("name").setValue(UUID.randomUUID().toString()+".mp4");
+                                        try {
+                                            thumbnailProcessing(uri.toString(),item.getName().substring(0, item.getName().indexOf(".")));
+                                        } catch (Throwable throwable) {
+                                            throwable.printStackTrace();
+                                            Log.i("something wrong", throwable.toString());
+                                        }
                                         memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("Keyword").setValue(prefix.getName());
 
                                     }
@@ -320,8 +341,15 @@ public class MainActivity extends AppCompatActivity {
                             String url = uri.toString();
                             Log.i("download url", url.toString());
                             Log.i("download url", item.getName().toString());
-                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("url").setValue(url);
+                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("video url").setValue(url);
                             memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("Keyword").setValue("");
+                            memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("name").setValue(UUID.randomUUID().toString()+".mp4");
+                            try {
+                                thumbnailProcessing(uri.toString(),item.getName().substring(0, item.getName().indexOf(".")));
+                            } catch (Throwable throwable) {
+                                throwable.printStackTrace();
+                                Log.i("something wrong", throwable.toString());
+                            }
 
                         }
                     });
@@ -335,6 +363,57 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
+        Bitmap bitmap = null;
+        MediaMetadataRetriever mediaMetadataRetriever = null;
+        try {
+            mediaMetadataRetriever = new MediaMetadataRetriever();
+            mediaMetadataRetriever.setDataSource(videoPath, new HashMap<String, String>());
+            //   mediaMetadataRetriever.setDataSource(videoPath);
+            bitmap = mediaMetadataRetriever.getFrameAtTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Throwable("Exception in retriveVideoFrameFromVideo(String videoPath)" + e.getMessage());
+
+        } finally {
+            if (mediaMetadataRetriever != null) {
+                mediaMetadataRetriever.release();
+            }
+        }
+        return bitmap;
+    }
+
+    public void thumbnailProcessing(String url,String contentId) throws Throwable {
+        String thumbnailName = UUID.randomUUID().toString()+".jpg";
+        Bitmap thumbnail = retriveVideoFrameFromVideo(url);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.PNG,10,stream);
+        byte[] byteArray = stream.toByteArray();
+        firebaseStorage.getReference().child("AttemptImages").child(thumbnailName).putBytes(byteArray)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri turi) {
+
+                                firebaseDatabase.getReference().child("Attempted Memes Video").child(contentId)
+                                        .child("thumbnail").setValue(turi.toString());
+
+
+                            }
+                        });
+                    }
+
+
+                });
+
+
+    }
+
+
 }
 
 

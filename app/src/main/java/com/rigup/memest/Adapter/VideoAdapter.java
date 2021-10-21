@@ -43,12 +43,15 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     Activity activity;
     VideoView videoView;
     ArrayList<String> videoUrl;
+    ArrayList<String> videoName;
 
-    public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity, ArrayList<String> videoUrl){
+    public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity,
+                        ArrayList<String> videoUrl, ArrayList<String> name){
         this.context = context;
         this.downlaodedImagesArray = downlaodedImagesArray;
         this.activity = activity;
         this.videoUrl = videoUrl;
+        this.videoName = name;
 
 
     }
@@ -76,21 +79,65 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
 
 
+        //compress file name given
 
         holder.imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
-                final View videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
-                videoView = videoContactView.findViewById(R.id.videoView);
-                videoView.setVideoURI(Uri.parse(videoUrl.get(position).toString()));
-                Log.i("imageUrll", videoUrl.get(position).toString());
-                videoView.requestFocus();
-                videoView.start();
+                String contentNamed = videoName.get(position);
 
-                alertDialogBuilder.setView(videoContactView);
-                Dialog dialog = alertDialogBuilder.create();
-                dialog.show();
+                try {
+                    if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET)!= PackageManager.PERMISSION_GRANTED){
+                        ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
+                    }
+
+
+                    if(!checkMemesVideoExist(contentNamed)){
+                        Log.i("checkMemes", checkMemesVideoExist(contentNamed).toString());
+                        Uri downloadUri = Uri.parse(videoUrl.get(position));
+
+                        DownloadManager downloadManager = (DownloadManager) activity.getSystemService(DOWNLOAD_SERVICE);
+                        DownloadManager.Request request = new DownloadManager.Request(downloadUri);
+
+                        request.setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,contentNamed);
+
+
+                        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+                        request.setVisibleInDownloadsUi(false);
+                        request.setAllowedOverRoaming(false);
+                        request.setNotificationVisibility(0);
+                        request.setMimeType("video/mp4");
+                        downloadManager.enqueue(request);
+                        
+
+
+                    }
+
+
+
+                    //Alert box for video
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
+                    final View videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
+                    videoView = videoContactView.findViewById(R.id.videoView);
+                    videoView.setVideoPath(Environment.getDataDirectory()+"/"+BuildConfig.APPLICATION_ID+"/files/Download/"+contentNamed);
+                    videoView.requestFocus();
+                    videoView.start();
+
+                    alertDialogBuilder.setView(videoContactView);
+                    Dialog dialog = alertDialogBuilder.create();
+                    dialog.show();
+
+                    ///end alert box
+
+
+                } catch (Exception e) {
+                    Log.d("Error....", e.toString());
+                }
+
+                /////////////////////////
+
+
+
             }
         });
 
@@ -98,9 +145,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         holder.shareButtonView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ShareVideo SV = new ShareVideo(videoUrl.get(position),context,activity);
-                Log.i("video urlll", videoUrl.get(position));
-                SV.execute();
+//                ShareVideo SV = new ShareVideo(videoUrl.get(position),context,activity,position, videoName);
+//
+//                SV.execute();
+
             }
         });
     }
@@ -149,88 +197,107 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     }
 
 
+    public Boolean checkMemesVideoExist(String VideoName){
+        File filePath = new File(Environment.getDataDirectory()+"/"+BuildConfig.APPLICATION_ID+"/files/Download/"+VideoName);
+        Log.i("checkMemes", filePath.getAbsolutePath());
 
-
-
-}
-
-
-class ShareVideo extends AsyncTask<String ,String,String>{
-
-    String videourl;
-    Context context;
-    Activity activity;
-    String fileName = UUID.randomUUID().toString()+".mp4";
-
-    public ShareVideo(String videourl, Context context,Activity activity) {
-        this.videourl = videourl;
-        this.context = context;
-        this.activity = activity;
-    }
-
-    @Override
-    protected String doInBackground(String... strings) {
-        sharevideFile(videourl, fileName,activity);
-        Log.i("video url", videourl);
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(String s) {
-
-        Uri imageUri = FileProvider.getUriForFile(
-                context,
-                BuildConfig.APPLICATION_ID+".provider", //(use your app signature + ".provider" )
-                new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + fileName));
-        Log.i("buildconfig deir", BuildConfig.APPLICATION_ID+".provider");
-
-        Intent sharintent=new Intent("android.intent.action.SEND");
-        sharintent.setType("video/mp4");
-        sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-        sharintent.putExtra("android.intent.extra.STREAM", imageUri) ;
-        activity.startActivity(Intent.createChooser(sharintent,"muh mae lele"));
-
-        super.onPostExecute(s);
-    }
-
-
-
-
-
-    private void sharevideFile(String videourl, String name,Activity activity) {
-
-        try {
-            if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET)!= PackageManager.PERMISSION_GRANTED){
-                ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
-            }
-
-
-
-            Uri downloadUri = Uri.parse(videourl);
-            Log.i("video URL", videourl);
-            DownloadManager downloadManager = (DownloadManager) activity.getSystemService(DOWNLOAD_SERVICE);
-            DownloadManager.Request request = new DownloadManager.Request(downloadUri);
-            Log.i("shitt", context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString());
-            request.setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,name);
-
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setVisibleInDownloadsUi(false);
-            request.setAllowedOverRoaming(false);
-            request.setNotificationVisibility(0);
-            request.setMimeType("video/mp4");
-
-
-            downloadManager.enqueue(request);
-        } catch (Exception e) {
-            Log.d("Error....", e.toString());
+        if(filePath.exists()){
+            return true;
+        }else{
+            return false;
         }
-
-
-
     }
 
+
 }
+
+
+//class ShareVideo extends AsyncTask<String ,String,String>{
+//
+//    String videourl;
+//    Context context;
+//    Activity activity;
+//    int position;
+//    ArrayList<String> compressVideoName;
+//
+//
+//
+//
+//
+//
+//    public ShareVideo(String videourl, Context context,Activity activity, int pos, ArrayList<String> videoName) {
+//        this.videourl = videourl;
+//        this.context = context;
+//        this.activity = activity;
+//        this.compressVideoName = videoName;
+//        this.position = pos;
+//
+//    }
+//
+//    @Override
+//    protected String doInBackground(String... strings) {
+//        sharevideFile(videourl, compressVideoName.get(position),activity);
+//
+//        return null;
+//    }
+//
+//    @Override
+//    protected void onPostExecute(String s) {
+//
+////
+////        Uri imageUri = FileProvider.getUriForFile(
+////                context,
+////                BuildConfig.APPLICATION_ID+".provider", //(use your app signature + ".provider" )
+////                new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + fileName));
+////
+////
+////        Intent sharintent=new Intent("android.intent.action.SEND");
+////        sharintent.setType("video/mp4");
+////        sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+////
+////        sharintent.putExtra("android.intent.extra.STREAM", imageUri) ;
+////        activity.startActivity(Intent.createChooser(sharintent,"Send to"));
+//
+//        super.onPostExecute(s);
+//    }
+//
+//
+//
+//
+//
+//    private void sharevideFile(String videourl, String name,Activity activity) {
+//
+//        try {
+//            if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET)!= PackageManager.PERMISSION_GRANTED){
+//                ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
+//            }
+//
+//
+//
+//            Uri downloadUri = Uri.parse(videourl);
+//            Log.i("video URL", videourl);
+//            DownloadManager downloadManager = (DownloadManager) activity.getSystemService(DOWNLOAD_SERVICE);
+//            DownloadManager.Request request = new DownloadManager.Request(downloadUri);
+////            Environment.DIRECTORY_DOWNLOADS,name
+//            request.setDestinationInExternalFilesDir(context,fiddle.getAbsolutePath(),name);
+//
+//            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+//            request.setVisibleInDownloadsUi(false);
+//            request.setAllowedOverRoaming(false);
+//            request.setNotificationVisibility(0);
+//            request.setMimeType("video/mp4");
+//
+//
+//            downloadManager.enqueue(request);
+//        } catch (Exception e) {
+//            Log.d("Error....", e.toString());
+//        }
+//
+//
+//
+//    }
+//
+//}
 
 
 

@@ -88,7 +88,7 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
             return;
         }
 
-        activity.videoAdapter = new VideoAdapter(activity, arrayList, activity,videoUrl );
+        activity.videoAdapter = new VideoAdapter(activity, arrayList, activity,videoUrl, activity.videoNamee );
         activity.recyclerView.setAdapter(activity.videoAdapter);
         activity.progressBar.setVisibility(View.GONE);
 
@@ -102,25 +102,7 @@ public class DownloadImagesInBackground extends AsyncTask<ArrayList<String>, Arr
 
 
 
-    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
-        Bitmap bitmap = null;
-        MediaMetadataRetriever mediaMetadataRetriever = null;
-        try {
-            mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(videoPath, new HashMap<String, String>());
-            //   mediaMetadataRetriever.setDataSource(videoPath);
-            bitmap = mediaMetadataRetriever.getFrameAtTime();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Throwable("Exception in retriveVideoFrameFromVideo(String videoPath)" + e.getMessage());
 
-        } finally {
-            if (mediaMetadataRetriever != null) {
-                mediaMetadataRetriever.release();
-            }
-        }
-        return bitmap;
-    }
 
 
 }
