@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -49,6 +50,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     ArrayList<String> videoUrl;
     ArrayList<String> videoName;
     float downloadID;
+    ProgressBar videoLoadingProgressBar;
+    AlertDialog.Builder alertDialogBuilder;
+    View videoContactView;
+    String contentNamed;
 
     public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity,
                         ArrayList<String> videoUrl, ArrayList<String> name){
@@ -69,6 +74,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.custom_video, parent, false);
         activity.registerReceiver(onDownloadComplete,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
         return new VideoAdapter.ViewHolder(view);
 
     }
@@ -90,13 +96,23 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         holder.imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String contentNamed = videoName.get(position);
+                contentNamed = videoName.get(position);
 
                 try {
                     if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET)!= PackageManager.PERMISSION_GRANTED){
                         ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
                     }
 
+                    //VideoView Dialog box view---------------------
+                    alertDialogBuilder = new AlertDialog.Builder(activity);
+                    videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
+                    videoView = videoContactView.findViewById(R.id.videoView);
+                    videoLoadingProgressBar = videoContactView.findViewById(R.id.videoLoadingProgressBar);
+                    videoLoadingProgressBar.setVisibility(View.VISIBLE);
+                    alertDialogBuilder.setView(videoContactView);
+                    Dialog dialog = alertDialogBuilder.create();
+                    dialog.show();
+                    //-----------------------till now
 
                     if(!checkMemesVideoExist(contentNamed)){
                         Log.i("checkMemes", checkMemesVideoExist(contentNamed).toString());
@@ -117,24 +133,23 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                         
 
 
+                    }else{
+                        //Alert box for video
+                        videoLoadingProgressBar.setVisibility(View.GONE);
+                        videoView.setVideoPath(activity.getApplicationContext().getExternalFilesDir(null)
+                                .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed);
+                        videoView.requestFocus();
+
+                        videoView.start();
+
+
+
+                        ///end alert box
                     }
 
 
 
-                    //Alert box for video
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
-                    final View videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
-                    videoView = videoContactView.findViewById(R.id.videoView);
-                    videoView.setVideoPath(activity.getApplicationContext().getExternalFilesDir(null)
-                            .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed);
-                    videoView.requestFocus();
-                    videoView.start();
 
-                    alertDialogBuilder.setView(videoContactView);
-                    Dialog dialog = alertDialogBuilder.create();
-                    dialog.show();
-
-                    ///end alert box
 
 
                 } catch (Exception e) {
@@ -178,10 +193,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         Button shareButtonView;
 
 
+
         public ViewHolder(View itemView){
             super(itemView);
             imageView = itemView.findViewById(R.id.iv_image);
             shareButtonView= itemView.findViewById(R.id.shareButtonView);
+
 
 
 
@@ -215,6 +232,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         }
     }
 
+    //When downloadig of video completed, it's  a listener
     private BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -222,13 +240,20 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             //Checking if the received broadcast is for our enqueued download by matching download id
             if (downloadID == id) {
-                Toast.makeText(activity, "Download Completed", Toast.LENGTH_SHORT).show();
+                videoLoadingProgressBar.setVisibility(View.GONE);
+                videoView.setVideoPath(activity.getApplicationContext().getExternalFilesDir(null)
+                        .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed);
+                videoView.requestFocus();
+
+                videoView.start();
+
+
             }
         }
 
          
     };
-
+//OnDestroy function is not assigned if arise any problem then checkout the this function.
 
 }
 
