@@ -5,8 +5,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -17,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
@@ -27,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.rigup.memest.BuildConfig;
+import com.rigup.memest.MainActivity;
 import com.rigup.memest.Model.VideoModel;
 import com.rigup.memest.R;
 
@@ -44,6 +48,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     VideoView videoView;
     ArrayList<String> videoUrl;
     ArrayList<String> videoName;
+    float downloadID;
 
     public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity,
                         ArrayList<String> videoUrl, ArrayList<String> name){
@@ -63,6 +68,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.custom_video, parent, false);
+        activity.registerReceiver(onDownloadComplete,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         return new VideoAdapter.ViewHolder(view);
 
     }
@@ -107,7 +113,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                         request.setAllowedOverRoaming(false);
                         request.setNotificationVisibility(0);
                         request.setMimeType("video/mp4");
-                        downloadManager.enqueue(request);
+                        downloadID = downloadManager.enqueue(request);
                         
 
 
@@ -119,7 +125,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
                     final View videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
                     videoView = videoContactView.findViewById(R.id.videoView);
-                    videoView.setVideoPath(Environment.getDataDirectory()+"/"+BuildConfig.APPLICATION_ID+"/files/Download/"+contentNamed);
+                    videoView.setVideoPath(activity.getApplicationContext().getExternalFilesDir(null)
+                            .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed);
                     videoView.requestFocus();
                     videoView.start();
 
@@ -134,7 +141,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                     Log.d("Error....", e.toString());
                 }
 
-                /////////////////////////
+                
 
 
 
@@ -198,8 +205,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
 
     public Boolean checkMemesVideoExist(String VideoName){
-        File filePath = new File(Environment.getDataDirectory()+"/"+BuildConfig.APPLICATION_ID+"/files/Download/"+VideoName);
-        Log.i("checkMemes", filePath.getAbsolutePath());
+        File filePath = new File(activity.getApplicationContext().getExternalFilesDir(null).getAbsolutePath()+File.separator+"Download"+File.separator+VideoName);
+
 
         if(filePath.exists()){
             return true;
@@ -207,6 +214,20 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             return false;
         }
     }
+
+    private BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Fetching the download id received with the broadcast
+            long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            //Checking if the received broadcast is for our enqueued download by matching download id
+            if (downloadID == id) {
+                Toast.makeText(activity, "Download Completed", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+         
+    };
 
 
 }
