@@ -115,17 +115,19 @@ public class MainActivity extends AppCompatActivity {
         if(s!=""){
             imagesurl.clear();
             videoUrl.clear();
+            videoNamee.clear();
             boolean founded =false;
             for (DataSnapshot postSnapshot : filterUsedData.getChildren()) {
                 videoAdapter.clearedImages();
                 int count =1;
                 Log.i("number of connects", String.valueOf(count));
                 count++;
-                if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("Keyword").getValue().toString().contains(s.toLowerCase())) {
+                if (postSnapshot.getKey().toLowerCase().contains(s.toLowerCase()) || postSnapshot.child("keyword").getValue().toString().contains(s.toLowerCase())) {
                     progressBar.setVisibility(View.VISIBLE);
                     founded= true;
-                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
-                    videoUrl.add(postSnapshot.child("url").getValue().toString());
+                    imagesurl.add(postSnapshot.child("thumbnail url").getValue().toString());
+                    videoUrl.add(postSnapshot.child("video url").getValue().toString());
+                    videoNamee.add(postSnapshot.child("video id").getValue().toString());
                 }
 
 
@@ -266,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
                     autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
                     imagesurl.add(postSnapshot.child("thumbnail url").getValue().toString());
                     videoUrl.add(postSnapshot.child("video url").getValue().toString());
-                    videoNamee.add(postSnapshot.child("video title").getValue().toString());
+                    videoNamee.add(postSnapshot.child("video id").getValue().toString());
                 }
 
 
