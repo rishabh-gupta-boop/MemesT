@@ -8,11 +8,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,13 +41,17 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
 import com.rigup.memest.Adapter.VideoAdapter;
 import com.rigup.memest.Model.VideoModel;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -246,8 +252,10 @@ public class MainActivity extends AppCompatActivity {
         fetchVideoUrlFromDatabase();
 
 
-    }
 
+
+    }
+    //get the database links and name and send to downloading these images and then arrayAdapter to set in recyclerView
     public void fetchVideoUrlFromDatabase(){
 
         FirebaseDatabase.getInstance().getReference().child("Attempted Memes Video").addValueEventListener(new ValueEventListener() {
@@ -256,9 +264,9 @@ public class MainActivity extends AppCompatActivity {
                 filterUsedData = snapshot;
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     autoCompleteSearchList.add(postSnapshot.getKey().toLowerCase());
-                    imagesurl.add(postSnapshot.child("thumbnail").getValue().toString());
+                    imagesurl.add(postSnapshot.child("thumbnail url").getValue().toString());
                     videoUrl.add(postSnapshot.child("video url").getValue().toString());
-                    videoNamee.add(postSnapshot.child("name").getValue().toString());
+                    videoNamee.add(postSnapshot.child("video title").getValue().toString());
                 }
 
 
@@ -296,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
               }
-
+    //Get the Firebase Storage url and title and set into database.
     public void getDownload(){
         DatabaseReference memesVideoDatabase = FirebaseDatabase.getInstance().getReference().child("Attempted Memes Video");
 
@@ -317,14 +325,17 @@ public class MainActivity extends AppCompatActivity {
                                     public void onSuccess(Uri uri) {
                                         String url = uri.toString();
                                         memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video url").setValue(url);
-                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("name").setValue(UUID.randomUUID().toString()+".mp4");
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video id").setValue(UUID.randomUUID().toString()+".mp4");
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video title").setValue(item.getName()
+                                                .indexOf(0,item.getName().indexOf(".")));
+
                                         try {
                                             thumbnailProcessing(uri.toString(),item.getName().substring(0, item.getName().indexOf(".")));
                                         } catch (Throwable throwable) {
                                             throwable.printStackTrace();
                                             Log.i("something wrong", throwable.toString());
                                         }
-                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("Keyword").setValue(prefix.getName());
+                                        memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("keyword").setValue(prefix.getName());
 
                                     }
                                 });
@@ -339,11 +350,11 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Uri uri) {
                             String url = uri.toString();
-                            Log.i("download url", url.toString());
-                            Log.i("download url", item.getName().toString());
                             memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("video url").setValue(url);
-                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("Keyword").setValue("");
-                            memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("name").setValue(UUID.randomUUID().toString()+".mp4");
+                            memesVideoDatabase.child(item.getName().substring(0,item.getName().indexOf("."))).child("keyword").setValue("");
+                            memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video id").setValue(UUID.randomUUID().toString()+".mp4");
+                            memesVideoDatabase.child(item.getName().substring(0, item.getName().indexOf("."))).child("video title").setValue(item.getName()
+                                    .indexOf(0,item.getName().indexOf(".")));
                             try {
                                 thumbnailProcessing(uri.toString(),item.getName().substring(0, item.getName().indexOf(".")));
                             } catch (Throwable throwable) {
@@ -364,7 +375,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
+    //Recieve url of video extract it thumbnail and return a bitmap
+    public  Bitmap retriveVideoFrameFromVideo(String videoPath) throws Throwable {
         Bitmap bitmap = null;
         MediaMetadataRetriever mediaMetadataRetriever = null;
         try {
@@ -381,34 +393,56 @@ public class MainActivity extends AppCompatActivity {
                 mediaMetadataRetriever.release();
             }
         }
+
+
         return bitmap;
     }
 
+
+    //Upload this bitmap to the firebase storage and firebase database
     public void thumbnailProcessing(String url,String contentId) throws Throwable {
-        String thumbnailName = UUID.randomUUID().toString()+".jpg";
+        String thumbnailName = UUID.randomUUID().toString()+".webp";
         Bitmap thumbnail = retriveVideoFrameFromVideo(url);
 
+        //Bitmap convert into byte array...
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.PNG,10,stream);
+        thumbnail.compress(Bitmap.CompressFormat.WEBP,0,stream);
         byte[] byteArray = stream.toByteArray();
+
+
+
+
+
+
         firebaseStorage.getReference().child("AttemptImages").child(thumbnailName).putBytes(byteArray)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Log.i("Url",taskSnapshot.getUploadSessionUri().toString());
                         taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri turi) {
 
                                 firebaseDatabase.getReference().child("Attempted Memes Video").child(contentId)
-                                        .child("thumbnail").setValue(turi.toString());
+                                        .child("thumbnail url").setValue(turi.toString());
+                                Log.i("Url Getting noErro", turi.toString());
 
-
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull  Exception e) {
+                                Log.i("Url getting error", e.toString());
                             }
                         });
                     }
 
 
-                });
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull  Exception e) {
+                Log.i("Url getting error whole", e.toString());
+            }
+        });
 
 
     }
