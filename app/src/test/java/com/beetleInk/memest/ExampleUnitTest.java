@@ -1,4 +1,4 @@
-package com.rigup.memest;
+package com.beetleInk.memest;
 
 import org.junit.Test;
 

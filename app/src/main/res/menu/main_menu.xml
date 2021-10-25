@@ -8,7 +8,9 @@
         app:showAsAction= "ifRoom"
         android:enabled="false"
         android:layout_gravity="center"
-        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        />
+    
 
 
     <item

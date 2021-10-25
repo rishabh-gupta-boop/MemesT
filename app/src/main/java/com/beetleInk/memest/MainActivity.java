@@ -1,4 +1,4 @@
-package com.rigup.memest;
+package com.beetleInk.memest;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,13 +8,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,22 +27,19 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.annotations.NotNull;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import com.rigup.memest.Adapter.VideoAdapter;
-import com.rigup.memest.Model.VideoModel;
+import com.beetleInk.memest.Adapter.VideoAdapter;
+import com.beetleInk.memest.Model.VideoModel;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,16 +49,17 @@ import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
-
+    SearchView.SearchAutoComplete searchAutoComplete;
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.main_menu, menu);
         MenuItem menuItem = menu.findItem(R.id.searchBar);
         SearchView searchView = (SearchView) menuItem.getActionView();
+
         searchView.setQueryHint("Search Here!");
 
-        final SearchView.SearchAutoComplete searchAutoComplete = (SearchView.SearchAutoComplete)searchView.findViewById(R.id.search_src_text);
+        searchAutoComplete = (SearchView.SearchAutoComplete)searchView.findViewById(R.id.search_src_text);
 //        searchAutoComplete.setBackgroundColor(Color.WHITE);
 //        searchAutoComplete.setTextColor(Color.BLACK);
         searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
@@ -113,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void filteredSearch( String s){
         if(s!=""){
+
             imagesurl.clear();
             videoUrl.clear();
             videoNamee.clear();
@@ -138,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                     totalDownlaodImages = 0;
                     downloadImagesInBackground = new DownloadImagesInBackground(MainActivity.this, videoUrl);
                     downloadImagesInBackground.execute(imagesurl);
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
                 } catch (Exception e) {
@@ -161,8 +158,16 @@ public class MainActivity extends AppCompatActivity {
             case R.id.searchBar:
                 Toast.makeText(this, "Search bar", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.savedMemes:
-                Toast.makeText(this, "Saved Memes", Toast.LENGTH_SHORT).show();
+
+            case android.R.id.home:
+                searchAutoComplete.setText(null);
+                totalDownlaodImages = 0;
+                videoAdapter.clearedImages();
+                imagesurl.clear();
+                videoUrl.clear();
+                videoNamee.clear();
+                progressBar.setVisibility(View.VISIBLE);
+                fetchVideoUrlFromDatabase();
                 return true;
             default:
                 Toast.makeText(this, "nothing Pressed", Toast.LENGTH_SHORT).show();
@@ -250,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
         searchView = findViewById(R.id.searchBar);
         firebaseStorage = FirebaseStorage.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
+
 
         fetchVideoUrlFromDatabase();
 

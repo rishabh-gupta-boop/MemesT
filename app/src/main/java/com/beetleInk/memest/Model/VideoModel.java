@@ -1,4 +1,4 @@
-package com.rigup.memest.Model;
+package com.beetleInk.memest.Model;
 
 import android.graphics.Bitmap;
 
