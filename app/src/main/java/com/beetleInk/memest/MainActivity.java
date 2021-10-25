@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView.LayoutManager recyclerViewLayoutManager;
     ArrayList<String> imagesurl;
     int totalDownlaodImages = 0;
-    ProgressBar progressBar;
+    public static ProgressBar progressBar;
     ProgressBar bottomProgressBar;
     String recordedQuery;
     GridLayoutManager layoutManager;

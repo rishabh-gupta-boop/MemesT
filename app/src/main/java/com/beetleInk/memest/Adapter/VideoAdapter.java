@@ -6,12 +6,15 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +29,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.beetleInk.memest.MainActivity;
 import com.bumptech.glide.request.RequestOptions;
 import com.beetleInk.memest.Model.VideoModel;
 import com.beetleInk.memest.R;
@@ -50,6 +54,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     String contentNamed;
     String videoPathInFileManager;
     Boolean downloadOrShare=null;
+    Uri uri;
 
     public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity,
                         ArrayList<String> videoUrl, ArrayList<String> name){
@@ -83,6 +88,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         if(downlaodedImagesArray.get(position).getDownloadImages()!=null){
             holder.imageView.setImageBitmap(downlaodedImagesArray.get(position).getDownloadImages());
         }
+        videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
+        videoLoadingProgressBar = videoContactView.findViewById(R.id.videoLoadingProgressBar);
 
 
 
@@ -102,9 +109,8 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
                     //VideoView Dialog box view---------------------
                     alertDialogBuilder = new AlertDialog.Builder(activity);
-                    videoContactView =  LayoutInflater.from(activity).inflate(R.layout.video_popup,null);
+
                     videoView = videoContactView.findViewById(R.id.videoView);
-                    videoLoadingProgressBar = videoContactView.findViewById(R.id.videoLoadingProgressBar);
                     videoLoadingProgressBar.setVisibility(View.VISIBLE);
                     alertDialogBuilder.setView(videoContactView);
                     Dialog dialog = alertDialogBuilder.create();
@@ -159,8 +165,20 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                 contentNamed = videoName.get(position);
                 videoPathInFileManager = activity.getApplicationContext().getExternalFilesDir(null)
                         .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed;
+
+                ContentValues content = new ContentValues(4);
+                content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
+                        System.currentTimeMillis() / 1000);
+                content.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+                content.put(MediaStore.Video.Media.DATA, videoPathInFileManager);
+
+                ContentResolver resolver = activity.getApplicationContext().getContentResolver();
+                uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
+
+
+
                 if(!checkMemesVideoExist(contentNamed)){
-                    videoLoadingProgressBar.setVisibility(View.VISIBLE);
+                    MainActivity.progressBar.setVisibility(View.VISIBLE);
                     downlaodMemesVideoFromFirebase(position);
                     downloadOrShare=false;
 
@@ -171,7 +189,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                     sharintent.setType("video/mp4");
                     sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     //Uri.fromFile(new File(videoPathInFileManager))
-                    sharintent.putExtra("android.intent.extra.STREAM", Uri.parse(videoPathInFileManager));
+                    sharintent.putExtra("android.intent.extra.STREAM", uri);
                     activity.startActivity(Intent.createChooser(sharintent,"Send to"));
                 }
 
@@ -268,11 +286,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                     videoView.start();
                 }else{
                     //Show a share app options
+                    MainActivity.progressBar.setVisibility(View.GONE);
                     Intent sharintent=new Intent("android.intent.action.SEND");
                     sharintent.setType("video/mp4");
                     sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     Log.i("asdfasdfasdf", Uri.parse(videoPathInFileManager).toString());
-                    sharintent.putExtra("android.intent.extra.STREAM", Uri.parse(videoPathInFileManager));
+                    sharintent.putExtra("android.intent.extra.STREAM", uri);
                     activity.startActivity(Intent.createChooser(sharintent,"Send to"));
                 }
 
