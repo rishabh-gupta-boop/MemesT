@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -27,6 +28,7 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.beetleInk.memest.MainActivity;
@@ -54,7 +56,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     String contentNamed;
     String videoPathInFileManager;
     Boolean downloadOrShare=null;
-    Uri uri;
+
 
     public VideoAdapter(Context context,ArrayList<VideoModel>  downlaodedImagesArray, Activity activity,
                         ArrayList<String> videoUrl, ArrayList<String> name){
@@ -162,18 +164,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
                     ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.INTERNET},1);
                 }
 
+                if(ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+                }
+
                 contentNamed = videoName.get(position);
-                videoPathInFileManager = activity.getApplicationContext().getExternalFilesDir(null)
-                        .getAbsolutePath()+File.separator+"Download"+File.separator+contentNamed;
 
-                ContentValues content = new ContentValues(4);
-                content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
-                        System.currentTimeMillis() / 1000);
-                content.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-                content.put(MediaStore.Video.Media.DATA, videoPathInFileManager);
-
-                ContentResolver resolver = activity.getApplicationContext().getContentResolver();
-                uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
 
 
 
@@ -184,13 +180,27 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
 
                 }else{
+
                     //Show a share app options
-                    Intent sharintent=new Intent("android.intent.action.SEND");
+                    MainActivity.progressBar.setVisibility(View.GONE);
+                    Intent sharintent=new Intent(Intent.ACTION_SEND);
                     sharintent.setType("video/mp4");
                     sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    //Uri.fromFile(new File(videoPathInFileManager))
-                    sharintent.putExtra("android.intent.extra.STREAM", uri);
+
+
+
+
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        sharintent.putExtra(Intent.EXTRA_STREAM, gettingUri());
+                    } else {
+                        sharintent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(videoPathInFileManager)));
+
+                    }
                     activity.startActivity(Intent.createChooser(sharintent,"Send to"));
+
+
+
                 }
 
 
@@ -269,6 +279,16 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             return false;
         }
     }
+    //getting uri from given content name default
+    public Uri gettingUri(){
+        videoPathInFileManager = activity.getApplicationContext().getExternalFilesDir(null)
+                .getAbsolutePath()+"/Download/"+contentNamed;
+
+        Uri uri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", new File(videoPathInFileManager));
+
+
+        return uri;
+    }
 
     //When downloadig of video completed, it's  a listener
     private BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
@@ -285,13 +305,26 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
                     videoView.start();
                 }else{
+
+
+
+
                     //Show a share app options
                     MainActivity.progressBar.setVisibility(View.GONE);
-                    Intent sharintent=new Intent("android.intent.action.SEND");
+                    Intent sharintent=new Intent(Intent.ACTION_SEND);
                     sharintent.setType("video/mp4");
                     sharintent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    Log.i("asdfasdfasdf", Uri.parse(videoPathInFileManager).toString());
-                    sharintent.putExtra("android.intent.extra.STREAM", uri);
+
+
+
+
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        sharintent.putExtra(Intent.EXTRA_STREAM, gettingUri());
+                    } else {
+                        sharintent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(videoPathInFileManager)));
+
+                    }
                     activity.startActivity(Intent.createChooser(sharintent,"Send to"));
                 }
 
